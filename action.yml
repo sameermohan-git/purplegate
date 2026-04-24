@@ -9,7 +9,7 @@ inputs:
   config:
     description: Path to consumer config YAML.
     required: false
-    default: .agent-redblue/config.yml
+    default: .purplegate/config.yml
   scan-paths:
     description: Comma-separated paths to scan. Default is repo root.
     required: false
@@ -57,7 +57,7 @@ inputs:
   allowlist:
     description: Path to allowlist YAML file.
     required: false
-    default: .agent-redblue/allowlist.yml
+    default: .purplegate/allowlist.yml
 
 outputs:
   report-path:
@@ -71,7 +71,7 @@ outputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/sameermohan-git/agent-redblue-ci:latest
+  image: docker://ghcr.io/sameermohan-git/purplegate:latest
   args:
     - --config=${{ inputs.config }}
     - --scan-paths=${{ inputs.scan-paths }}
@@ -86,5 +86,5 @@ runs:
     - --upload-sarif=${{ inputs.upload-sarif }}
     - --allowlist=${{ inputs.allowlist }}
   env:
-    AGENT_REDBLUE_LLM_API_KEY: ${{ inputs.llm-api-key }}
+    PURPLEGATE_LLM_API_KEY: ${{ inputs.llm-api-key }}
     GITHUB_TOKEN: ${{ github.token }}

@@ -41,7 +41,7 @@ from src.probes.workflows import WorkflowsProbe
 from src.report import enforce_gate, render_markdown, render_sarif
 from src.report.gate import GateFailure
 
-log = logging.getLogger("agent-redblue-ci")
+log = logging.getLogger("purplegate")
 
 _PROBE_REGISTRY = {
     Probe.SECRETS: SecretsProbe,
@@ -57,8 +57,8 @@ _PROBE_REGISTRY = {
 
 
 @click.command()
-@click.option("--config", default=".agent-redblue/config.yml", show_default=True)
-@click.option("--allowlist", default=".agent-redblue/allowlist.yml", show_default=True)
+@click.option("--config", default=".purplegate/config.yml", show_default=True)
+@click.option("--allowlist", default=".purplegate/allowlist.yml", show_default=True)
 @click.option("--scan-paths", default=".", show_default=True,
               help="Comma-separated paths to scan (relative to repo root).")
 @click.option("--fail-on", default="high", show_default=True,
@@ -90,7 +90,7 @@ def main(  # noqa: PLR0913 — Click entry
     _configure_logging()
 
     workspace = Path(os.environ.get("GITHUB_WORKSPACE") or os.getcwd()).resolve()
-    log.info("agent-redblue-ci starting (workspace=%s)", workspace)
+    log.info("purplegate starting (workspace=%s)", workspace)
 
     try:
         cfg = load_consumer_config(workspace / config)
@@ -117,7 +117,7 @@ def main(  # noqa: PLR0913 — Click entry
         scan_paths=[workspace / p.strip() for p in scan_paths.split(",") if p.strip()],
         target_url=target_url or None,
         llm_provider=llm_provider,
-        llm_api_key=os.environ.get("AGENT_REDBLUE_LLM_API_KEY") or None,
+        llm_api_key=os.environ.get("PURPLEGATE_LLM_API_KEY") or None,
         llm_model=llm_model or None,
         probe_output_dir=Path("/tmp/redblue"),
     )
@@ -197,7 +197,7 @@ def _parse_probe(name: str) -> Probe | None:
 
 def _configure_logging() -> None:
     logging.basicConfig(
-        level=os.environ.get("AGENT_REDBLUE_LOG_LEVEL", "INFO").upper(),
+        level=os.environ.get("PURPLEGATE_LOG_LEVEL", "INFO").upper(),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 

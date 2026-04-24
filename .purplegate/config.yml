@@ -1,6 +1,6 @@
 # Self-config: audit this repo with its own Action.
 app:
-  name: agent-redblue-ci
+  name: purplegate
   stack: []
 
 paths:

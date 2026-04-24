@@ -5,7 +5,7 @@ shouldn't block CI. Every entry must be **dated** and **reviewed on expiry**.
 
 ## Format
 
-`.agent-redblue/allowlist.yml`:
+`.purplegate/allowlist.yml`:
 
 ```yaml
 - finding_id: SECRETS-a1b2c3d4

@@ -2,12 +2,12 @@
 
 ## Reporting a vulnerability
 
-If you find a vulnerability in `agent-redblue-ci` — whether in our probe implementations,
+If you find a vulnerability in `purplegate` — whether in our probe implementations,
 our Docker image, our release pipeline, or a logic bug that causes us to miss or
 misreport findings — please report it privately.
 
 **Email:** `security@kardoxa.com` (placeholder — update with real alias before v1.0)
-**GitHub Security Advisories:** https://github.com/sameermohan-git/agent-redblue-ci/security/advisories/new
+**GitHub Security Advisories:** https://github.com/sameermohan-git/purplegate/security/advisories/new
 
 Do not open public GitHub issues for security reports.
 
@@ -22,7 +22,7 @@ Do not open public GitHub issues for security reports.
 
 In scope:
 - This repository's source (`src/`, `Dockerfile`, `action.yml`, workflows).
-- The published container image(s) at `ghcr.io/sameermohan-git/agent-redblue-ci`.
+- The published container image(s) at `ghcr.io/sameermohan-git/purplegate`.
 - Our released Actions tags/digests.
 
 Out of scope (report to upstream instead):

@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "agent-redblue-ci"
+name = "purplegate"
 version = "0.1.0"
 description = "Red-team / blue-team security audit for agentic-AI apps — orchestrator and probes."
 readme = "README.md"
@@ -43,7 +43,7 @@ dev = [
 ]
 
 [project.scripts]
-agent-redblue = "src.orchestrator:main"
+purplegate = "src.orchestrator:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

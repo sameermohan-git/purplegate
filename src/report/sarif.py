@@ -31,9 +31,9 @@ def render_sarif(report: Report, *, version: str = "0.1.0") -> str:
             {
                 "tool": {
                     "driver": {
-                        "name": "agent-redblue-ci",
+                        "name": "purplegate",
                         "version": version,
-                        "informationUri": "https://github.com/sameermohan-git/agent-redblue-ci",
+                        "informationUri": "https://github.com/sameermohan-git/purplegate",
                         "rules": rules,
                     },
                     "extensions": taxonomies,
@@ -62,7 +62,7 @@ def _collect_rules(findings: list[Finding]) -> list[dict[str, Any]]:
             "name": f.rule_id.split("/")[-1],
             "shortDescription": {"text": f.title},
             "fullDescription": {"text": f.description or f.title},
-            "helpUri": f"https://github.com/sameermohan-git/agent-redblue-ci/blob/main/docs/PROBES.md#{f.probe.value}",
+            "helpUri": f"https://github.com/sameermohan-git/purplegate/blob/main/docs/PROBES.md#{f.probe.value}",
             "defaultConfiguration": {"level": _SARIF_LEVEL[f.original_severity or f.severity]},
             "properties": {
                 "probe": f.probe.value,

@@ -25,7 +25,7 @@ def load_defaults() -> dict[str, Any]:
 
 
 def load_consumer_config(config_path: Path) -> dict[str, Any]:
-    """Load + schema-validate the consumer's .agent-redblue/config.yml.
+    """Load + schema-validate the consumer's .purplegate/config.yml.
 
     Raises FileNotFoundError if the file is absent — the orchestrator catches
     that and falls back to defaults.

@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   audit:
-    name: Audit agent-redblue-ci with agent-redblue-ci
+    name: Audit purplegate with purplegate
     runs-on: ubuntu-latest
     steps:
       - uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf  # v2.12.2
@@ -33,7 +33,7 @@ jobs:
 
       - uses: ./
         with:
-          config: .agent-redblue/config.yml
+          config: .purplegate/config.yml
           fail-on: high
           # No LLM probe here — we're static-scanning our own repo.
           llm-provider: none

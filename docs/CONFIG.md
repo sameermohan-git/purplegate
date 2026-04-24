@@ -1,6 +1,6 @@
 # Configuration reference
 
-The Action reads `.agent-redblue/config.yml` from the consumer repo root (override
+The Action reads `.purplegate/config.yml` from the consumer repo root (override
 with the `config:` input). The full JSON schema lives at `config/schemas/config.schema.json`.
 
 ## Top-level sections
@@ -66,7 +66,7 @@ probes:
     lakera_mosscap: true
     lakera_gandalf: true
     custom_packs:
-      - .agent-redblue/attacks/custom_chat.yaml
+      - .purplegate/attacks/custom_chat.yaml
 
 blueteam:
   # Blue-team gets extra credit when these runtime defenses are detected.
@@ -77,7 +77,7 @@ blueteam:
     - limiter.limit
     - RateLimiter
 
-allowlist_path: .agent-redblue/allowlist.yml
+allowlist_path: .purplegate/allowlist.yml
 ```
 
 ## Inputs that live on the Action itself (not in config)
@@ -97,10 +97,10 @@ Some controls are workflow-time only and are passed via `with:`:
 
 The Action looks for these in the runner environment:
 
-- `AGENT_REDBLUE_LLM_API_KEY` — set from the `llm-api-key` input.
+- `PURPLEGATE_LLM_API_KEY` — set from the `llm-api-key` input.
 - `GITHUB_TOKEN` — auto-set from `${{ github.token }}`; needed for PR comment + SARIF upload.
 - `SUPABASE_DB_URL` — optional; if set, `iac` probe does a live Supabase catalog RLS check.
-- `AGENT_REDBLUE_ALLOW_NETWORK` — set to `1` only when you intentionally want probes to reach the internet (e.g. OSV feed updates). Default: offline-only.
+- `PURPLEGATE_ALLOW_NETWORK` — set to `1` only when you intentionally want probes to reach the internet (e.g. OSV feed updates). Default: offline-only.
 
 ## Egress domains (for `harden-runner` block mode)
 

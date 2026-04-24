@@ -54,9 +54,9 @@ We act accordingly.
 ### 1. Pin us by SHA or digest
 
 ```yaml
-- uses: sameermohan-git/agent-redblue-ci@<40-char-sha>
+- uses: sameermohan-git/purplegate@<40-char-sha>
 # or
-- uses: sameermohan-git/agent-redblue-ci@sha256:<image-digest>
+- uses: sameermohan-git/purplegate@sha256:<image-digest>
 ```
 
 Renovate or Dependabot will bump the SHA on a schedule. Review each PR.
@@ -77,15 +77,15 @@ on unexpected outbound connections. Our egress domains are listed in
 
 ```bash
 gh attestation verify \
-  oci://ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z \
-  --repo sameermohan-git/agent-redblue-ci
+  oci://ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
+  --repo sameermohan-git/purplegate
 ```
 
 Inspect the image and pin by digest:
 
 ```bash
-docker pull ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z
-docker image inspect ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z \
+docker pull ghcr.io/sameermohan-git/purplegate:vX.Y.Z
+docker image inspect ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
   | jq '.[0].RepoDigests'
 ```
 
@@ -109,13 +109,13 @@ Pin by SHA and run on every PR. Catches risky dep additions before they merge.
 Everything we claim is verifiable. None of it is taken on trust.
 
 - **Image digest** — `docker image inspect` or the GHCR UI.
-- **Signature** — `cosign verify ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z \
-  --certificate-identity-regexp 'https://github.com/sameermohan-git/agent-redblue-ci/.*'
+- **Signature** — `cosign verify ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
+  --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.*'
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'`
 - **Provenance** — `gh attestation verify oci://...`
 - **SBOM** — attached to each GitHub release as `sbom.spdx.json` + `sbom.cdx.json`.
 - **SLSA** — provenance attestation includes SLSA level metadata.
-- **Scorecard** — https://securityscorecards.dev/viewer/?uri=github.com/sameermohan-git/agent-redblue-ci
+- **Scorecard** — https://securityscorecards.dev/viewer/?uri=github.com/sameermohan-git/purplegate
 
 ## If something goes wrong
 

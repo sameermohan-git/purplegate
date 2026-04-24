@@ -1,6 +1,6 @@
 # Quickstart
 
-Four steps to get `agent-redblue-ci` running on your repo.
+Four steps to get `purplegate` running on your repo.
 
 ## 1. Add the workflow
 
@@ -31,9 +31,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: sameermohan-git/agent-redblue-ci@<sha>   # or @sha256:<digest>
+      - uses: sameermohan-git/purplegate@<sha>   # or @sha256:<digest>
         with:
-          config: .agent-redblue/config.yml
+          config: .purplegate/config.yml
           fail-on: high
           llm-provider: anthropic
           llm-api-key: ${{ secrets.AUDIT_ANTHROPIC_KEY }}
@@ -45,7 +45,7 @@ See [`SUPPLY_CHAIN.md`](SUPPLY_CHAIN.md) for the pinning rationale.
 
 ## 2. Add a config file
 
-`.agent-redblue/config.yml` — see [`CONFIG.md`](CONFIG.md) for the full schema. Minimal example:
+`.purplegate/config.yml` — see [`CONFIG.md`](CONFIG.md) for the full schema. Minimal example:
 
 ```yaml
 app:
@@ -73,7 +73,7 @@ endpoints:
 
 ## 3. Seed an allowlist
 
-`.agent-redblue/allowlist.yml` — start empty, add entries as needed. Every entry must have an expiry within 365 days.
+`.purplegate/allowlist.yml` — start empty, add entries as needed. Every entry must have an expiry within 365 days.
 
 ```yaml
 # - finding_id: PROMPT-INJ-042
@@ -93,18 +93,18 @@ In your GitHub repo **Settings → Secrets and variables → Actions**:
 
 ```bash
 # Confirm the release is signed and provenance-attested.
-gh attestation verify oci://ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z \
-  --repo sameermohan-git/agent-redblue-ci
+gh attestation verify oci://ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
+  --repo sameermohan-git/purplegate
 
 # Pull and inspect the image digest.
-docker pull ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z
-docker image inspect ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z | jq '.[0].RepoDigests'
+docker pull ghcr.io/sameermohan-git/purplegate:vX.Y.Z
+docker image inspect ghcr.io/sameermohan-git/purplegate:vX.Y.Z | jq '.[0].RepoDigests'
 ```
 
 Then pin by that digest in your workflow:
 
 ```yaml
-- uses: sameermohan-git/agent-redblue-ci@sha256:<digest from above>
+- uses: sameermohan-git/purplegate@sha256:<digest from above>
 ```
 
 ## First run

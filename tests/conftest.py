@@ -21,7 +21,7 @@ def fixtures_dir() -> Path:
 def make_context():
     def _build(fixture_name: str) -> ProbeContext:
         repo = _FIXTURES / fixture_name
-        cfg = load_consumer_config(repo / ".agent-redblue" / "config.yml")
+        cfg = load_consumer_config(repo / ".purplegate" / "config.yml")
         defaults = load_defaults()
         merged = merge_defaults(cfg, defaults)
         return ProbeContext(

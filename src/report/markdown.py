@@ -14,7 +14,7 @@ _SEVERITY_EMOJI = {
 def render_markdown(report: Report, *, max_findings: int = 10) -> str:
     """Render a Markdown report suitable for a PR comment."""
     lines: list[str] = []
-    lines.append("## agent-redblue-ci — Security Audit")
+    lines.append("## purplegate — Security Audit")
     lines.append("")
     lines.append(_summary_table(report))
     lines.append("")

@@ -1,6 +1,6 @@
 # Threat Model
 
-This document says, plainly, what `agent-redblue-ci` **can** and **cannot** catch, and what
+This document says, plainly, what `purplegate` **can** and **cannot** catch, and what
 assumptions hold for each probe.
 
 ## What this Action is

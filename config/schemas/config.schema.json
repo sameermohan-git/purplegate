@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/sameermohan-git/agent-redblue-ci/config.schema.json",
-  "title": "agent-redblue-ci consumer config",
-  "description": "Shape of .agent-redblue/config.yml",
+  "$id": "https://github.com/sameermohan-git/purplegate/config.schema.json",
+  "title": "purplegate consumer config",
+  "description": "Shape of .purplegate/config.yml",
   "type": "object",
   "required": ["app", "paths"],
   "additionalProperties": false,

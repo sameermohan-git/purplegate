@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/sameermohan-git/agent-redblue-ci/findings.schema.json",
-  "title": "agent-redblue-ci findings output",
+  "$id": "https://github.com/sameermohan-git/purplegate/findings.schema.json",
+  "title": "purplegate findings output",
   "description": "Normalized findings produced by all probes before being rendered to SARIF/Markdown/JSON.",
   "type": "object",
   "required": ["schema_version", "generated_at", "findings"],

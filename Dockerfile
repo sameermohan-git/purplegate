@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 #
-# agent-redblue-ci runtime image.
+# purplegate runtime image.
 #
 # Principles:
 #   1. Every tool version is pinned. Renovate bumps the pins; reviewers check the SHA/digest.
@@ -97,10 +97,10 @@ RUN set -eux; \
 # ── Stage 3: final runtime ───────────────────────────────────────────────────
 FROM python:3.12.7-slim-bookworm
 
-LABEL org.opencontainers.image.source="https://github.com/sameermohan-git/agent-redblue-ci" \
+LABEL org.opencontainers.image.source="https://github.com/sameermohan-git/purplegate" \
       org.opencontainers.image.description="Red-team / blue-team CI audit for agentic-AI apps" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.title="agent-redblue-ci"
+      org.opencontainers.image.title="purplegate"
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -123,7 +123,7 @@ COPY --chown=redblue:redblue config /app/config
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    AGENT_REDBLUE_ROOT=/app
+    PURPLEGATE_ROOT=/app
 
 USER redblue
 WORKDIR /github/workspace

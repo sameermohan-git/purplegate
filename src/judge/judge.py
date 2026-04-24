@@ -213,7 +213,7 @@ def _judge(payload: Payload, response: str, ctx: ProbeContext) -> Verdict | None
         log.warning("anthropic SDK not installed; judge cannot run")
         return None
 
-    api_key = ctx.llm_api_key or os.environ.get("AGENT_REDBLUE_LLM_API_KEY")
+    api_key = ctx.llm_api_key or os.environ.get("PURPLEGATE_LLM_API_KEY")
     if not api_key:
         log.warning("no LLM API key; judge cannot run")
         return None
@@ -234,7 +234,7 @@ def _judge(payload: Payload, response: str, ctx: ProbeContext) -> Verdict | None
             temperature=0.0,
             system=JUDGE_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_message}],
-            metadata={"user_id": "agent-redblue-ci-judge"},
+            metadata={"user_id": "purplegate-judge"},
         )
     except Exception as exc:  # noqa: BLE001 — fail-open on any SDK error
         log.warning("judge API error: %s", exc)

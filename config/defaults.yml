@@ -1,5 +1,5 @@
 # Default severity model + probe defaults.
-# Consumers may override these per-probe in their .agent-redblue/config.yml.
+# Consumers may override these per-probe in their .purplegate/config.yml.
 # Consumers may LOWER severity for a specific rule but not RAISE it.
 
 severity_levels:

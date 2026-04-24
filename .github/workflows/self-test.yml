@@ -76,8 +76,8 @@ jobs:
         run: |
           cd tests/fixtures/${{ matrix.fixture }}
           python -m src.orchestrator \
-            --config .agent-redblue/config.yml \
-            --allowlist .agent-redblue/allowlist.yml \
+            --config .purplegate/config.yml \
+            --allowlist .purplegate/allowlist.yml \
             --fail-on none \
             --report-format json,markdown,sarif
 

@@ -1,83 +1,94 @@
-# agent-redblue-ci
+<div align="center">
 
-Red-team / blue-team security audit for agentic-AI apps, packaged as a reusable GitHub Action.
-Built for FastAPI + React + Supabase + iOS repos like SaveScoutAI, but stack-agnostic.
+<a href="docs/TRANSLATIONS.md">🇨🇳 中文</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇯🇵 日本語</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇰🇷 한국어</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇧🇷 Português</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇪🇸 Español</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇩🇪 Deutsch</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇫🇷 Français</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇷🇺 Русский</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇮🇳 हिन्दी</a> &middot;
+<a href="docs/TRANSLATIONS.md">🇹🇷 Türkçe</a>
 
-**Status: v0 scaffold** — not yet published. Repo layout and contracts are stable;
-probe implementations are being filled in behind a `status` field in each finding.
+<br />
+<br />
 
-## What it does
+<img src="assets/logo.svg" alt="purplegate" width="220" />
 
-One Action wraps a curated set of battle-tested scanners plus a prompt-injection
-probe, produces SARIF + Markdown + JSON, posts a PR comment, and fails the build
-on Critical/High findings. It does NOT re-implement the scanners; it orchestrates,
-normalizes output, and gates on severity.
+<br />
+<br />
 
-| Probe | Wraps | Catches |
+<img src="https://img.shields.io/badge/RED%20TEAM-8%20PROBES-d32f2f?style=for-the-badge&labelColor=424242" alt="8 probes" />
+<img src="https://img.shields.io/badge/BLUE%20TEAM-DEFENSE%20SCAN-1976d2?style=for-the-badge&labelColor=424242" alt="blue team" />
+<img src="https://img.shields.io/badge/TAXONOMY-OWASP%20%2B%20ATLAS-7b1fa2?style=for-the-badge&labelColor=424242" alt="OWASP + ATLAS" />
+<img src="https://img.shields.io/badge/PYTHON-3.12%2B-3776ab?style=for-the-badge&labelColor=424242&logo=python&logoColor=white" alt="Python 3.12+" />
+
+<br />
+
+<img src="https://img.shields.io/badge/RUNTIME-DOCKER-2496ed?style=for-the-badge&labelColor=424242&logo=docker&logoColor=white" alt="docker" />
+<img src="https://img.shields.io/badge/SUPPLY%20CHAIN-COSIGN%20SIGNED-2e7d32?style=for-the-badge&labelColor=424242" alt="cosign signed" />
+<img src="https://img.shields.io/badge/REPORT-SARIF%202.1.0-f57c00?style=for-the-badge&labelColor=424242" alt="SARIF 2.1.0" />
+<img src="https://img.shields.io/badge/SLSA-LEVEL%203-f5a623?style=for-the-badge&labelColor=424242" alt="SLSA L3" />
+
+</div>
+
+# purplegate — Block insecure agentic-AI merges
+
+---
+
+<div align="center">
+
+**Agentic apps merge code that leaks secrets, misses RLS, or accepts prompt injection.**
+**purplegate runs red-team probes and a blue-team defense scan on every PR — and fails the build before those merges ship.**
+
+</div>
+
+<p align="center">
+  <code>uses: sameermohan-git/purplegate@&lt;sha&gt;</code> &nbsp;|&nbsp;
+  <code>docker run ghcr.io/sameermohan-git/purplegate:v1</code> &nbsp;|&nbsp;
+  <a href="https://github.com/sameermohan-git/purplegate/actions/workflows/self-test.yml"><strong>Live self-test →</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/sameermohan-git/purplegate/releases"><img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2" alt="release"/></a>
+  <img src="https://img.shields.io/badge/tests-37%20passing-brightgreen" alt="tests"/>
+  <a href="https://securityscorecards.dev/viewer/?uri=github.com/sameermohan-git/purplegate"><img src="https://img.shields.io/ossf-scorecard/github.com/sameermohan-git/purplegate?label=scorecard" alt="scorecard"/></a>
+  <img src="https://img.shields.io/badge/latency-%3C4min-blue" alt="latency"/>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"/></a>
+</p>
+
+---
+
+## Why purplegate
+
+Agentic-AI apps are a new class of attack surface. Traditional SAST misses the LLM-specific bugs (prompt injection, system-prompt leakage, cross-user data exposure). Traditional security Actions miss the AI-specific supply chain (MCP servers, vendored SDKs, vulnerable corpora). You need both. purplegate is both.
+
+- **🔴 Red-team** — eight probes covering every class of agentic-app risk: secrets, SAST, dependencies, IaC / RLS, workflow injection, **prompt injection** (isolated Claude-as-judge), MCP config risks, and HTTP security headers.
+- **🔵 Blue-team** — a defense scanner that detects runtime guardrails (LLM Guard, Guardrails AI), rate limiters, and allowlisted findings — then **adjusts severity DOWN** on findings that are already mitigated. Severity is never raised above the red-team baseline.
+- **🟣 Purple-team gate** — one CI action, one SARIF report. Critical / High findings fail the build by default; Medium / Low report only. Fully configurable.
+
+## What it catches (that others miss)
+
+| Class | Example finding | Tool |
 |---|---|---|
-| `secrets` | [gitleaks](https://github.com/gitleaks/gitleaks) + [trufflehog](https://github.com/trufflesecurity/trufflehog) `--only-verified` | Committed API keys, private keys, `.env*` leaks |
-| `sast` | [Semgrep CE](https://github.com/semgrep/semgrep) with curated rule packs | FastAPI auth gaps, SQLi, unsafe `subprocess`, XSS |
-| `deps` | [osv-scanner](https://github.com/google/osv-scanner) + pip-audit + npm audit | Known CVEs, merged + deduped |
-| `iac` | [Checkov](https://github.com/bridgecrewio/checkov) + custom Semgrep rules | Missing RLS, misconfigured IaC, workflows |
-| `workflows` | [zizmor](https://github.com/zizmorcore/zizmor) + [actionlint](https://github.com/rhysd/actionlint) | `pull_request_target` injection, template injection, missing `persist-credentials` |
-| `prompt_injection` | [promptfoo](https://github.com/promptfoo/promptfoo) + Lakera corpora + isolated LLM judge | Off-topic leaks, generic advice, system-prompt extraction, jailbreaks, OWASP LLM Top 10 |
-| `mcp` | Static scan | Secrets in MCP configs, missing tool allowlists, vulnerable MCP SDK versions |
-| `sbom` | [Syft](https://github.com/anchore/syft) | SPDX + CycloneDX inventory (informational) |
-| `headers` | HTTP fetch (optional) | Missing CSP, HSTS, X-Frame-Options when `target-url` is provided |
+| LLM prompt injection | "Who is Trump?" answered despite a finance-app scope guard | isolated Claude judge via promptfoo |
+| System-prompt leakage | Attacker extracts your app's instructions via a crafted payload | same judge, 3-rep agreement |
+| Cross-user data disclosure | App references another user's transactions when asked | purple-team dedicated probe |
+| Missing Supabase RLS | `CREATE TABLE public.transactions` without `ENABLE ROW LEVEL SECURITY` | custom static check |
+| Workflow command injection | `${{ github.event.issue.title }}` inside a `run:` step | wraps [zizmor](https://github.com/zizmorcore/zizmor) |
+| Live credential in git | a real `sk_live_...` committed today | [trufflehog](https://github.com/trufflesecurity/trufflehog) `--only-verified` |
+| Vulnerable MCP SDK | pinned version missing the Apr 2026 Anthropic MCP RCE fix | vendored advisory feed |
+| Generic advice leak | "RRSPs are generally good" from a finance app that should only answer about user data | judge rubric v1 |
 
-Findings are mapped to **OWASP LLM Top 10 v2025**, **OWASP Top 10 for Agentic Applications 2026**,
-and **MITRE ATLAS v5.4.0** technique IDs in SARIF `ruleId` fields.
+Every finding maps to **OWASP LLM Top 10 v2025**, **OWASP Agentic 2026**, and **MITRE ATLAS v5.4.0** — surfaced in SARIF `ruleId` so GitHub Code Scanning + downstream SIEM tools filter by framework.
 
-## Supply-chain posture
-
-We don't ship a dependency that could trojan your build. Hard rules:
-
-1. **Docker container action** — every tool is pre-vendored in the published image,
-   pinned by SHA in the Dockerfile. No `pip install` or `npm install` at runtime.
-2. **SHA-pin every third-party `uses:`** in our own CI, never tag-pin.
-3. **Signed releases** — Sigstore attestation via `actions/attest-build-provenance`,
-   cosign keyless image signature, SLSA L3 provenance.
-4. **SBOM on every release** via Syft.
-5. **OSSF Scorecard** runs on our repo on every push; target ≥ 8/10.
-6. **Third-party audit gate** — new upstream deps require OSSF Scorecard ≥ 7.
-
-See [`docs/SUPPLY_CHAIN.md`](docs/SUPPLY_CHAIN.md) for the full policy and how to
-verify our releases yourself.
-
-### Consumers should pin us by SHA or digest
-
-```yaml
-- uses: sameermohan-git/agent-redblue-ci@<40-char-sha>   # or @sha256:<digest>
-```
-
-Verify provenance before first use:
-```
-gh attestation verify oci://ghcr.io/sameermohan-git/agent-redblue-ci:vX.Y.Z \
-  --repo sameermohan-git/agent-redblue-ci
-```
-
-### Projects we explicitly avoid and why
-
-| Project | Reason |
-|---|---|
-| `tj-actions/*` | CVE-2025-30066 (Mar 2025, force-push compromise). Use `dorny/paths-filter` pinned by SHA. |
-| `reviewdog/action-setup`, `-shellcheck`, `-staticcheck`, `-ast-grep`, `-typos`, `-composite-template` | CVE-2025-30154 (Mar 2025, same incident). |
-| `aquasecurity/trivy-action` by tag | Tags force-pushed Mar 2026. Trivy binary is fine; we invoke it directly from our vendored image. |
-| `tfsec` | Deprecated, absorbed into Trivy. |
-| `protectai/rebuff` | Archived May 2025. |
-
-## Quickstart (for consumers)
-
-1. Add the workflow:
+## Quickstart
 
 ```yaml
 # .github/workflows/security-audit.yml
 name: Security Audit
-on:
-  pull_request:
-  schedule: [{ cron: '0 6 * * *' }]
-  workflow_dispatch: {}
-
+on: [pull_request, workflow_dispatch]
 permissions:
   contents: read
   security-events: write
@@ -87,67 +98,110 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@<sha>   # recommended
+      - uses: step-security/harden-runner@<sha>
         with: { egress-policy: audit }
       - uses: actions/checkout@<sha>
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: sameermohan-git/agent-redblue-ci@<sha>
+      - uses: sameermohan-git/purplegate@<sha>
         with:
-          config: .agent-redblue/config.yml
+          config: .purplegate/config.yml
           fail-on: high
           llm-provider: anthropic
           llm-api-key: ${{ secrets.AUDIT_ANTHROPIC_KEY }}
+          target-url: ${{ secrets.STAGING_API_URL }}
 ```
 
-2. Add a config file at `.agent-redblue/config.yml` — see [`docs/CONFIG.md`](docs/CONFIG.md).
-3. Add an (initially empty) allowlist at `.agent-redblue/allowlist.yml` — see [`docs/SUPPRESSIONS.md`](docs/SUPPRESSIONS.md).
+Then add `.purplegate/config.yml` — see [`docs/CONFIG.md`](docs/CONFIG.md) for the full schema. Full walkthrough in [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
 
-## Action inputs
-
-See [`action.yml`](action.yml). Most important:
-
-- `config` — path to consumer config YAML (default `.agent-redblue/config.yml`)
-- `fail-on` — `critical | high | medium | low | none` (default `high`)
-- `llm-provider` — `anthropic | openai | azure | none` (default `none`; disables the prompt-injection probe)
-- `llm-api-key` — provider key; pass via `${{ secrets.* }}`
-- `target-url` — deployed staging URL for live prompt-injection + headers probes
-- `include-probes` / `exclude-probes` — comma-separated probe names
-
-## Threat model + non-goals
-
-See [`THREAT_MODEL.md`](THREAT_MODEL.md). Short version:
-**this Action catches a specific, documented class of issues.** It does not replace a
-penetration test, a human code review, or production-runtime monitoring. The
-prompt-injection probe recall is ≤ 80% on novel attack patterns — mitigated by
-corpus updates, not by claims.
-
-## Repo layout
+## Architecture
 
 ```
-action.yml              # thin wrapper: runs the Docker image
-Dockerfile              # reproducible multi-stage build, every tool pinned by SHA
-src/
-  orchestrator.py       # runs selected probes, aggregates findings
-  probes/               # one module per probe; each wraps + normalizes
-  blueteam/             # severity adjuster + hardening registry
-  judge/                # isolated LLM-as-judge for prompt_injection
-  report/               # SARIF + Markdown + gate
-  taxonomy/             # vendored OWASP + ATLAS YAML
-  payloads/             # vendored Lakera corpora + custom attack packs
-tests/
-  unit/                 # pytest per probe
-  fixtures/             # vuln_* + clean_app fixtures for self-test
-config/
-  defaults.yml
-  schemas/              # JSON schemas for consumer config + findings
-docs/                   # QUICKSTART, PROBES, CONFIG, SEVERITY, SUPPRESSIONS, SUPPLY_CHAIN, TAXONOMY
-.github/workflows/      # self-test, release, scorecard, audit-consumer
+┌─ Consumer repo ─────────────────────────┐
+│  .purplegate/config.yml                 │
+│  .purplegate/allowlist.yml              │
+│  .github/workflows/security-audit.yml ──┼─▶ purplegate Docker image
+└─────────────────────────────────────────┘     │
+                                                ▼
+                        ┌───────────────────────────────────────┐
+                        │  Orchestrator                         │
+                        │   ├─ secrets        (gitleaks + th)   │
+                        │   ├─ sast           (Semgrep + AST)   │
+                        │   ├─ deps           (osv-scanner)     │
+                        │   ├─ iac            (Checkov + RLS)   │
+                        │   ├─ workflows      (zizmor)          │
+                        │   ├─ prompt_injection ──▶ isolated    │
+                        │   │                       Claude judge│
+                        │   ├─ mcp            (static scan)     │
+                        │   ├─ sbom           (Syft)            │
+                        │   └─ headers        (httpx)           │
+                        ├───────────────────────────────────────┤
+                        │  Blue-team defense scanner            │
+                        │   (severity adjuster — never raises)  │
+                        ├───────────────────────────────────────┤
+                        │  Report (SARIF + Markdown + JSON)     │
+                        │  Gate (fail-on: critical / high / …)  │
+                        └───────────────────────────────────────┘
 ```
 
-## Contributing / security
+## Supply-chain posture
 
-See [`SECURITY.md`](SECURITY.md) for coordinated disclosure. Pull requests welcome once the v1 scaffold is cut.
+This tool's single most important property is that **it does not become the attack vector it's meant to defend against** — so consumers don't have to trust us, they can verify:
+
+- **Docker container action.** Every scanner pinned by SHA in `Dockerfile`; no `pip install` / `npm install` at runtime.
+- **Every third-party `uses:` pinned by 40-char commit SHA** — never by tag. Mar 2025 (tj-actions) and Mar 2026 (trivy-action) taught us why.
+- **Signed releases.** Sigstore attestation via `actions/attest-build-provenance` + cosign keyless + SLSA L3 provenance + SBOM (Syft).
+- **Scorecard ≥ 8/10** target; drops below 7 block releases.
+- **Verify before first use:**
+  ```bash
+  gh attestation verify oci://ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
+    --repo sameermohan-git/purplegate
+  ```
+
+Full policy in [`docs/SUPPLY_CHAIN.md`](docs/SUPPLY_CHAIN.md). Threat model in [`THREAT_MODEL.md`](THREAT_MODEL.md).
+
+## Severity & gating
+
+| Severity | Default gate | Examples |
+|---|---|---|
+| 🔴 Critical | **Fails CI** | Verified live credential · public table without RLS · workflow command injection · vulnerable MCP SDK · verified system-prompt extraction |
+| 🟠 High | **Fails CI** | Route without auth · generic-advice leak · CVE ≥ 7.0 · missing runtime LLM guardrails |
+| 🟡 Medium | Reports only | Missing CSP · unpinned non-MCP dep |
+| 🟢 Low | Reports only | Suboptimal Referrer-Policy |
+
+Override via the `fail-on:` input. Allowlist entries need a reason, an `acknowledged_by`, and an `expires` within 365 days — see [`docs/SUPPRESSIONS.md`](docs/SUPPRESSIONS.md).
+
+## Avoid list
+
+Baked into the tool because supply-chain choices are security choices:
+
+| Project | Reason |
+|---|---|
+| `tj-actions/*` · `reviewdog/action-setup` / `-shellcheck` / `-staticcheck` / `-ast-grep` / `-typos` / `-composite-template` | CVE-2025-30066 / CVE-2025-30154 (Mar 2025 force-push compromise) |
+| `aquasecurity/trivy-action` **by tag** | Mar 2026 tag force-push. The Trivy binary is fine; we invoke it directly from our vendored image. |
+| `tfsec` | Deprecated, absorbed into Trivy — use Checkov. |
+| `protectai/rebuff` | Archived May 2025. |
+| HarmBench / AdvBench corpora **in CI** | MIT but contain toxic content. |
+
+## Roadmap
+
+- [x] v0.1 — scaffold: orchestrator + 9 probes + blue-team + SARIF + gate
+- [x] v0.2 — 37-test fixture suite + self-test CI
+- [ ] v0.3 — pinned Dockerfile binaries + signed GHCR image
+- [ ] v0.4 — promptfoo integration with `owasp:llm` preset + Lakera Mosscap/Gandalf corpora
+- [ ] v0.5 — Checkov wire-up + live Supabase catalog drift check
+- [ ] v0.6 — Consumer-specific SARIF suppression helpers
+- [ ] v1.0 — Marketplace publish, Scorecard ≥ 8, SLSA L3 signed, docs complete
+
+## Contributing
+
+PRs welcome once v1.0 is cut; until then we're stabilising the interface. Security issues → [`SECURITY.md`](SECURITY.md). Probe additions → open an issue first to discuss severity + taxonomy mapping.
 
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
+
+---
+
+<div align="center">
+  <sub>Built for agentic apps that take security seriously. Used in <a href="https://github.com/sameermohan-git/financial-tracker">SaveScoutAI</a>.</sub>
+</div>

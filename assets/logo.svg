@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="purplegate logo placeholder">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e53935"/>
+      <stop offset="50%" stop-color="#7b1fa2"/>
+      <stop offset="100%" stop-color="#1976d2"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" fill="#0d1117"/>
+  <polygon points="256,56 456,176 456,336 256,456 56,336 56,176" fill="none" stroke="url(#grad)" stroke-width="14" filter="url(#glow)"/>
+  <line x1="256" y1="56" x2="256" y2="456" stroke="#e53935" stroke-width="10" opacity="0.55"/>
+  <line x1="256" y1="56" x2="256" y2="456" stroke="#1976d2" stroke-width="10" opacity="0.55" transform="translate(0,0) rotate(180 256 256)"/>
+  <text x="256" y="300" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700" font-size="160" fill="#e1d3ee" text-anchor="middle">pg</text>
+</svg>
