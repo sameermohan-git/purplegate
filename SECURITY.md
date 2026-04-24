@@ -6,7 +6,7 @@ If you find a vulnerability in `purplegate` — whether in our probe implementat
 our Docker image, our release pipeline, or a logic bug that causes us to miss or
 misreport findings — please report it privately.
 
-**Email:** `security@kardoxa.com` (placeholder — update with real alias before v1.0)
+**Email:** `privacy@kardoxa.com`
 **GitHub Security Advisories:** https://github.com/sameermohan-git/purplegate/security/advisories/new
 
 Do not open public GitHub issues for security reports.

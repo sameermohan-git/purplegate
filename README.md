@@ -1,15 +1,15 @@
 <div align="center">
 
-<a href="docs/TRANSLATIONS.md">🇨🇳 中文</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇯🇵 日本語</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇰🇷 한국어</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇧🇷 Português</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇪🇸 Español</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇩🇪 Deutsch</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇫🇷 Français</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇷🇺 Русский</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇮🇳 हिन्दी</a> &middot;
-<a href="docs/TRANSLATIONS.md">🇹🇷 Türkçe</a>
+<a href="docs/i18n/README.zh.md">🇨🇳 中文</a> &middot;
+<a href="docs/i18n/README.ja.md">🇯🇵 日本語</a> &middot;
+<a href="docs/i18n/README.ko.md">🇰🇷 한국어</a> &middot;
+<a href="docs/i18n/README.pt.md">🇧🇷 Português</a> &middot;
+<a href="docs/i18n/README.es.md">🇪🇸 Español</a> &middot;
+<a href="docs/i18n/README.de.md">🇩🇪 Deutsch</a> &middot;
+<a href="docs/i18n/README.fr.md">🇫🇷 Français</a> &middot;
+<a href="docs/i18n/README.ru.md">🇷🇺 Русский</a> &middot;
+<a href="docs/i18n/README.hi.md">🇮🇳 हिन्दी</a> &middot;
+<a href="docs/i18n/README.tr.md">🇹🇷 Türkçe</a>
 
 <br />
 <br />
