@@ -58,14 +58,22 @@ class DepsProbe(BaseProbe):
             [binary, "--format", "json", "--recursive", str(self.ctx.repo_root)],
             timeout=300,
         )
-        if proc.returncode not in (0, 1):
-            log.warning("osv-scanner exited %d: %s", proc.returncode, proc.stderr[:200])
-            return []
+        # osv-scanner uses non-zero exit codes for findings, plugin warnings,
+        # and partial failures — not just hard errors. Try parsing JSON first;
+        # only treat unparseable output as a tool failure.
         try:
             data = json.loads(proc.stdout or "{}")
         except json.JSONDecodeError:
-            log.warning("osv-scanner non-JSON output")
+            log.warning(
+                "osv-scanner exited %d with non-JSON output: %s",
+                proc.returncode, proc.stderr[:200],
+            )
             return []
+        if proc.returncode not in (0, 1):
+            log.info(
+                "osv-scanner exited %d (warnings present, JSON parsed OK)",
+                proc.returncode,
+            )
 
         out: list[dict] = []
         for result in data.get("results", []):
@@ -91,45 +99,75 @@ class DepsProbe(BaseProbe):
     # ── pip-audit ───────────────────────────────────────────────────────
 
     def _run_pip_audit(self) -> list[dict]:
+        """Audit each requirements file in the consumer repo.
+
+        Scans `requirements.txt` and common variants if present. We do NOT
+        scan the active environment (default pip-audit behaviour) because in
+        this Docker action the active environment is purplegate's own venv,
+        not the consumer's. Returns [] if no requirements file is found —
+        osv-scanner picks up pyproject.toml + Pipfile + others anyway.
+        """
         binary = self.which_or_skip("pip-audit")
         if not binary:
             return []
-        proc = self.run_tool(
-            [binary, "--format", "json", "--disable-pip", "--local"],
-            cwd=self.ctx.repo_root,
-            timeout=300,
-        )
-        if proc.returncode not in (0, 1):
-            log.warning("pip-audit exited %d: %s", proc.returncode, proc.stderr[:200])
-            return []
-        try:
-            data = json.loads(proc.stdout or "[]")
-        except json.JSONDecodeError:
-            log.warning("pip-audit non-JSON output")
+
+        candidates = [
+            "requirements.txt",
+            "requirements-dev.txt",
+            "requirements/base.txt",
+            "requirements/prod.txt",
+        ]
+        req_files = [
+            self.ctx.repo_root / c
+            for c in candidates
+            if (self.ctx.repo_root / c).is_file()
+        ]
+        if not req_files:
             return []
 
-        if isinstance(data, dict):
-            deps = data.get("dependencies", [])
-        else:
-            deps = data
         out: list[dict] = []
-        for dep in deps:
-            name = dep.get("name", "")
-            version = dep.get("version", "")
-            for vuln in dep.get("vulns", []):
-                out.append(
-                    {
-                        "source": "pip-audit",
-                        "file": "requirements",
-                        "package": name,
-                        "version": version,
-                        "ecosystem": "PyPI",
-                        "id": vuln.get("id", "UNKNOWN"),
-                        "aliases": vuln.get("aliases", []),
-                        "summary": vuln.get("description", ""),
-                        "cvss": None,
-                    }
+        for req_file in req_files:
+            rel = req_file.relative_to(self.ctx.repo_root).as_posix()
+            proc = self.run_tool(
+                [binary, "--format", "json", "-r", str(req_file)],
+                cwd=self.ctx.repo_root,
+                timeout=300,
+            )
+            # pip-audit exits 1 when vulnerabilities found, 0 when clean.
+            # Anything else is a tool failure (network, parse, etc).
+            try:
+                data = json.loads(proc.stdout or "{}")
+            except json.JSONDecodeError:
+                log.warning(
+                    "pip-audit exited %d on %s, non-JSON output: %s",
+                    proc.returncode, rel, proc.stderr[:200],
                 )
+                continue
+            if proc.returncode not in (0, 1):
+                log.warning(
+                    "pip-audit exited %d on %s: %s",
+                    proc.returncode, rel, proc.stderr[:200],
+                )
+                # JSON may still be partial / usable — fall through.
+
+            deps = data.get("dependencies", []) if isinstance(data, dict) else data
+            for dep in deps or []:
+                name = dep.get("name", "")
+                version = dep.get("version", "")
+                for vuln in dep.get("vulns", []):
+                    out.append(
+                        {
+                            "source": "pip-audit",
+                            "file": rel,
+                            "package": name,
+                            "version": version,
+                            "ecosystem": "PyPI",
+                            "id": vuln.get("id", "UNKNOWN"),
+                            "aliases": vuln.get("aliases", []),
+                            "summary": vuln.get("description", ""),
+                            "cvss": None,
+                        }
+                    )
         return out
 
     # ── Common ──────────────────────────────────────────────────────────
