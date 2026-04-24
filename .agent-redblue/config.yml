@@ -1,0 +1,10 @@
+# Self-config: audit this repo with its own Action.
+app:
+  name: agent-redblue-ci
+  stack: []
+
+paths:
+  backend: src
+
+mcp:
+  configs: []   # no MCP surface in this repo

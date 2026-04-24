@@ -1,0 +1,10 @@
+app:
+  name: vuln_supabase_sql_fixture
+  stack: [supabase]
+
+paths:
+  migrations: supabase/migrations
+
+supabase:
+  require_rls: true
+  migrations_glob: supabase/migrations/*.sql

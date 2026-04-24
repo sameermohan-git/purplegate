@@ -1,0 +1,5 @@
+app:
+  name: vuln_workflow_fixture
+  stack: []
+
+paths: {}

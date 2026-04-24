@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sameermohan-git/agent-redblue-ci/config.schema.json",
+  "title": "agent-redblue-ci consumer config",
+  "description": "Shape of .agent-redblue/config.yml",
+  "type": "object",
+  "required": ["app", "paths"],
+  "additionalProperties": false,
+  "properties": {
+    "app": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "stack": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["fastapi", "flask", "django", "express", "nextjs", "react", "vue", "svelte", "supabase", "postgres", "mysql", "ios-swiftui", "android-kotlin"]
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "properties": {
+        "backend": { "type": "string" },
+        "frontend": { "type": "string" },
+        "migrations": { "type": "string" },
+        "ios": { "type": "string" },
+        "android": { "type": "string" },
+        "infrastructure": { "type": "string" }
+      }
+    },
+    "supabase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "require_rls": { "type": "boolean", "default": true },
+        "migrations_glob": { "type": "string" },
+        "db_url_env": { "type": "string" }
+      }
+    },
+    "fastapi": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "routers_glob": { "type": "string" },
+        "auth_dependencies": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "method"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "pattern": "^/" },
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+          "payload_template": { "type": "object" },
+          "auth": { "type": "string", "enum": ["bearer", "cookie", "none"] }
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "regex"],
+            "properties": {
+              "name": { "type": "string" },
+              "regex": { "type": "string" }
+            }
+          }
+        },
+        "allowlist_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "probes": { "type": "object" },
+    "blueteam": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expected_guardrails": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rate_limit_decorators": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "allowlist_path": { "type": "string" }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":pinDigests",
+    "helpers:pinGitHubActionDigests",
+    "security:openssf-scorecard"
+  ],
+  "labels": ["dependencies", "renovate"],
+  "timezone": "America/Toronto",
+  "schedule": ["before 6am on Monday"],
+  "prConcurrentLimit": 3,
+  "rebaseWhen": "behind-base-branch",
+  "configMigration": true,
+  "dependencyDashboard": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "minimumReleaseAge": "0 days"
+  },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "Pin GitHub Actions by commit SHA (not tag).",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "extractVersion": "^(?<version>.*)$"
+    },
+    {
+      "description": "Auto-merge minor/patch for well-known maintainers after tests pass.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "patch"],
+      "matchPackagePrefixes": [
+        "actions/",
+        "github/",
+        "anchore/",
+        "sigstore/",
+        "slsa-framework/",
+        "step-security/",
+        "ossf/"
+      ],
+      "automerge": false,
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "prCreation": "immediate"
+    },
+    {
+      "description": "Manual review required for bumps to scanners and LLM SDKs.",
+      "matchPackageNames": [
+        "semgrep",
+        "checkov",
+        "pip-audit",
+        "osv-scanner",
+        "promptfoo",
+        "anthropic",
+        "openai"
+      ],
+      "automerge": false,
+      "reviewersFromCodeOwners": true,
+      "addLabels": ["needs-human-review"]
+    },
+    {
+      "description": "Flag any dep where upstream OSSF Scorecard is below 7.",
+      "matchDatasources": ["github-releases", "npm", "pypi"],
+      "osvVulnerabilityAlerts": true
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Pin tool binaries inside Dockerfile by release tag + checksum.",
+      "fileMatch": ["(^|/)Dockerfile$"],
+      "matchStrings": [
+        "#\\s*(?<depName>[a-z][a-z0-9-]+)\\s+TODO:\\s+pin.*?\\n.*?releases/download/(?<currentValue>v[^/]+)/"
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+name: Dog-food audit
+
+# Runs the Action against ITS OWN repo. Catches regressions where our
+# published image would mis-handle a real project.
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+concurrency:
+  group: audit-consumer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Audit agent-redblue-ci with agent-redblue-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf  # v2.12.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./
+        with:
+          config: .agent-redblue/config.yml
+          fail-on: high
+          # No LLM probe here — we're static-scanning our own repo.
+          llm-provider: none
+          comment-on-pr: "false"
+          upload-sarif: "true"

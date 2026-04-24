@@ -1,0 +1,90 @@
+name: Agent Red/Blue CI
+description: Red-team / blue-team security audit for agentic-AI apps (secrets, RLS, prompt injection, hooks, MCP, deps). Pin by SHA or digest.
+author: sameermohan-git
+branding:
+  icon: shield
+  color: red
+
+inputs:
+  config:
+    description: Path to consumer config YAML.
+    required: false
+    default: .agent-redblue/config.yml
+  scan-paths:
+    description: Comma-separated paths to scan. Default is repo root.
+    required: false
+    default: "."
+  fail-on:
+    description: Minimum severity that fails the build (critical | high | medium | low | none).
+    required: false
+    default: high
+  report-format:
+    description: Comma-separated report formats (markdown | json | sarif).
+    required: false
+    default: markdown,sarif,json
+  llm-provider:
+    description: Provider for prompt-injection + blue-team LLM passes (anthropic | openai | azure | none).
+    required: false
+    default: none
+  llm-api-key:
+    description: API key for the LLM provider. Pass via ${{ secrets.* }}.
+    required: false
+    default: ""
+  llm-model:
+    description: Model identifier (leave blank for provider default).
+    required: false
+    default: ""
+  target-url:
+    description: Deployed URL to probe with live prompt-injection + headers checks (optional).
+    required: false
+    default: ""
+  include-probes:
+    description: Comma-separated probe names to run.
+    required: false
+    default: secrets,sast,deps,iac,workflows,prompt_injection,mcp,sbom,headers
+  exclude-probes:
+    description: Comma-separated probe names to skip.
+    required: false
+    default: ""
+  comment-on-pr:
+    description: Post a summary comment on the PR.
+    required: false
+    default: "true"
+  upload-sarif:
+    description: Upload SARIF to GitHub Code Scanning.
+    required: false
+    default: "true"
+  allowlist:
+    description: Path to allowlist YAML file.
+    required: false
+    default: .agent-redblue/allowlist.yml
+
+outputs:
+  report-path:
+    description: Path to the generated Markdown report.
+  findings-count:
+    description: Total findings.
+  critical-count:
+    description: Critical findings.
+  high-count:
+    description: High findings.
+
+runs:
+  using: docker
+  image: docker://ghcr.io/sameermohan-git/agent-redblue-ci:latest
+  args:
+    - --config=${{ inputs.config }}
+    - --scan-paths=${{ inputs.scan-paths }}
+    - --fail-on=${{ inputs.fail-on }}
+    - --report-format=${{ inputs.report-format }}
+    - --llm-provider=${{ inputs.llm-provider }}
+    - --llm-model=${{ inputs.llm-model }}
+    - --target-url=${{ inputs.target-url }}
+    - --include-probes=${{ inputs.include-probes }}
+    - --exclude-probes=${{ inputs.exclude-probes }}
+    - --comment-on-pr=${{ inputs.comment-on-pr }}
+    - --upload-sarif=${{ inputs.upload-sarif }}
+    - --allowlist=${{ inputs.allowlist }}
+  env:
+    AGENT_REDBLUE_LLM_API_KEY: ${{ inputs.llm-api-key }}
+    GITHUB_TOKEN: ${{ github.token }}

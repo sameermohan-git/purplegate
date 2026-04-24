@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sameermohan-git/agent-redblue-ci/findings.schema.json",
+  "title": "agent-redblue-ci findings output",
+  "description": "Normalized findings produced by all probes before being rendered to SARIF/Markdown/JSON.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "action_version": { "type": "string" },
+    "image_digest": { "type": "string" },
+    "config_hash": { "type": "string" },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "by_severity": {
+          "type": "object",
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0 },
+            "high": { "type": "integer", "minimum": 0 },
+            "medium": { "type": "integer", "minimum": 0 },
+            "low": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "by_probe": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "runtime_ms": { "type": "integer" },
+        "llm_cost_usd": { "type": "number" }
+      }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["finding_id", "probe", "rule_id", "severity", "title", "location"],
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "type": "string",
+          "description": "Stable hash of probe + rule_id + file + snippet. Used for allowlist matching."
+        },
+        "probe": {
+          "type": "string",
+          "enum": ["secrets", "sast", "deps", "iac", "workflows", "prompt_injection", "mcp", "sbom", "headers"]
+        },
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(/[a-z0-9._-]+)+$",
+          "description": "Canonical form: probe/subsystem/short-name"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"]
+        },
+        "original_severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "description": "Severity before blue-team adjustment."
+        },
+        "title": { "type": "string", "minLength": 5, "maxLength": 160 },
+        "description": { "type": "string" },
+        "location": {
+          "type": "object",
+          "required": ["file"],
+          "properties": {
+            "file": { "type": "string" },
+            "start_line": { "type": "integer", "minimum": 1 },
+            "end_line": { "type": "integer", "minimum": 1 },
+            "start_column": { "type": "integer", "minimum": 1 },
+            "end_column": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Snippet of the matched content. PII-redacted per the probe's rules."
+        },
+        "cve_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^CVE-\\d{4}-\\d{4,7}$" }
+        },
+        "cwe_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^CWE-\\d+$" }
+        },
+        "taxonomy": {
+          "type": "array",
+          "description": "Cross-references to OWASP / MITRE ATLAS IDs.",
+          "items": {
+            "type": "object",
+            "required": ["framework", "id"],
+            "properties": {
+              "framework": {
+                "type": "string",
+                "enum": ["OWASP LLM Top 10 v2025", "OWASP Agentic 2026", "MITRE ATLAS v5.4.0", "OWASP Top 10 2021"]
+              },
+              "id": { "type": "string" },
+              "url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "defenses": {
+          "type": "array",
+          "description": "Blue-team context: defenses detected around this finding.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "status": { "type": "string", "enum": ["present", "absent", "unknown"] },
+              "evidence": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "suggested_hardening": {
+          "type": "string",
+          "description": "Blue-team suggestion. Unified-diff-style when produced by the LLM pass."
+        },
+        "allowlist_entry": {
+          "type": ["object", "null"],
+          "description": "Present when the finding matched an allowlist entry."
+        },
+        "probe_metadata": {
+          "type": "object",
+          "description": "Probe-specific extras (judge verdict JSON, CVSS vector, etc.)."
+        }
+      }
+    }
+  }
+}

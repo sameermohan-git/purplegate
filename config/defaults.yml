@@ -1,0 +1,75 @@
+# Default severity model + probe defaults.
+# Consumers may override these per-probe in their .agent-redblue/config.yml.
+# Consumers may LOWER severity for a specific rule but not RAISE it.
+
+severity_levels:
+  - critical
+  - high
+  - medium
+  - low
+
+gate:
+  default_fail_on: high   # "critical" | "high" | "medium" | "low" | "none"
+
+probes:
+  secrets:
+    history_commits: 200
+    include_uncommitted: true
+    verify_with_trufflehog: true
+  sast:
+    rule_packs:
+      - p/python
+      - p/javascript
+      - p/fastapi
+      - p/flask
+      - p/owasp-top-ten
+    custom_rules_dir: src/probes/sast_rules
+  deps:
+    prefer: osv-scanner
+    also_run: [pip-audit, npm-audit]
+    cvss_thresholds:
+      critical: 9.0
+      high: 7.0
+      medium: 4.0
+  iac:
+    checkov_enabled: true
+    supabase_rls_check: true
+  workflows:
+    zizmor_enabled: true
+    actionlint_enabled: true
+  prompt_injection:
+    max_payloads_pr: 80
+    max_payloads_nightly: 800
+    owasp_preset: true
+    lakera_mosscap: true
+    lakera_gandalf: true
+    judge_repetitions: 3
+    judge_agreement_threshold: 2
+    judge_timeout_seconds: 5
+  mcp:
+    vulnerable_feed: vulnerablemcp.info
+  sbom:
+    formats: [spdx-json, cyclonedx-json]
+  headers:
+    required:
+      - content-security-policy
+      - strict-transport-security
+      - x-frame-options
+      - x-content-type-options
+      - referrer-policy
+
+blueteam:
+  adjust_down_on:
+    runtime_guardrail_detected: -1
+    auth_and_rate_limit_detected: -1
+    path_in_allowlist_pattern: -2
+  # Severity is never adjusted UP.
+
+allowlist:
+  max_expiry_days: 365
+  min_reason_length: 20
+
+reporting:
+  formats: [markdown, sarif, json]
+  sarif_version: "2.1.0"
+  pr_comment_max_findings: 10

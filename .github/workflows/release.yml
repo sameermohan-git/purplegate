@@ -1,0 +1,133 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write        # cosign keyless + attest-build-provenance
+  attestations: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build, sign, and publish
+    runs-on: ubuntu-latest
+    outputs:
+      image-digest: ${{ steps.build-push.outputs.digest }}
+      image-ref: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf  # v2.12.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392  # v3.6.0
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435  # v3.11.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  # v5.7.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push image
+        id: build-push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: true
+          sbom: true
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a  # v3.8.1
+
+      - name: Sign image (keyless)
+        env:
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+          IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Generate SLSA / SBOM attestation
+        uses: actions/attest-build-provenance@bd77c077858b8d561b7a36cbe48ef4cc642ca39d  # v2.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9  # v0.20.1
+        with:
+          image: ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9  # v0.20.1
+        with:
+          image: ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }}
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Attach SBOMs to release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8  # v2.3.2
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            sbom.spdx.json
+            sbom.cdx.json
+          generate_release_notes: true
+
+  verify:
+    name: Post-release verification (dog-food)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf  # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a  # v3.8.1
+
+      - name: Verify image signature
+        env:
+          IMAGE: ${{ needs.build.outputs.image-ref }}
+          DIGEST: ${{ needs.build.outputs.image-digest }}
+        run: |
+          cosign verify "${IMAGE}@${DIGEST}" \
+            --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.github/workflows/release\.yml@.+' \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com

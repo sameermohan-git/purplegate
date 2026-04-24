@@ -1,0 +1,24 @@
+name: Bad Workflow
+# Classic pull_request_target + untrusted-input injection pattern.
+# Fallback workflow probe must flag.
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # Missing persist-credentials: false — probe flags High.
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: echo the PR title
+        # Command injection sink via ${{ github.event.* }} — probe flags Critical.
+        run: |
+          echo "Title is ${{ github.event.pull_request.title }}"
+          echo "Body is ${{ github.event.pull_request.body }}"

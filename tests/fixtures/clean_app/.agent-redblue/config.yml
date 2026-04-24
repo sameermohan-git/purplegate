@@ -1,0 +1,16 @@
+app:
+  name: clean_app_fixture
+  stack: [fastapi, supabase]
+
+paths:
+  backend: app
+  migrations: supabase/migrations
+
+supabase:
+  require_rls: true
+  migrations_glob: supabase/migrations/*.sql
+
+fastapi:
+  routers_glob: app/api/*.py
+  auth_dependencies:
+    - get_current_user

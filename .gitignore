@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime outputs (never commit these — they can contain secrets from failing scans)
+/reports/
+/tmp/
+*.sarif
+*.spdx.json
+*.cdx.json
+
+# Local secrets (safety net; real secrets must never be committed)
+.env
+.env.*
+!.env.example
+
+# Vendored payload corpora are large — users should fetch on build
+# (but we keep a small sample in src/payloads/ for unit tests)
+src/payloads/*.large.jsonl

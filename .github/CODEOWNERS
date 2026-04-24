@@ -1,0 +1,12 @@
+# Every change needs a human reviewer.
+*                      @sameermohan-git
+
+# Security-critical paths get extra scrutiny.
+/.github/              @sameermohan-git
+/Dockerfile            @sameermohan-git
+/action.yml            @sameermohan-git
+/renovate.json         @sameermohan-git
+/src/judge/            @sameermohan-git
+/src/taxonomy/         @sameermohan-git
+/SECURITY.md           @sameermohan-git
+/THREAT_MODEL.md       @sameermohan-git

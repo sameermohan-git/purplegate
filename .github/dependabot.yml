@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, github-actions]
+    open-pull-requests-limit: 10
+    # Pin-by-SHA policy: Dependabot rewrites the SHA; reviewer verifies vs upstream signed release.
+    commit-message:
+      prefix: "chore(actions)"
+
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, python]
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, docker]
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(docker)"

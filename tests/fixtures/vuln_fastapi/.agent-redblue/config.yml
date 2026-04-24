@@ -1,0 +1,11 @@
+app:
+  name: vuln_fastapi_fixture
+  stack: [fastapi]
+
+paths:
+  backend: app
+
+fastapi:
+  routers_glob: app/api/*.py
+  auth_dependencies:
+    - get_current_user
