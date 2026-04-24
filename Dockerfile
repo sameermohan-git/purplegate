@@ -23,7 +23,7 @@
 # SHA256 was computed locally and is pinned in the RUN block (reproducible
 # via `curl ... | sha256sum`).
 
-FROM debian:12-slim AS binary-fetcher
+FROM debian:13-slim AS binary-fetcher
 
 ARG TARGETARCH=amd64
 ARG TARGETOS=linux
