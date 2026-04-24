@@ -203,5 +203,5 @@ MIT. See [`LICENSE`](LICENSE).
 ---
 
 <div align="center">
-  <sub>Built for agentic apps that take security seriously. Used in <a href="https://github.com/sameermohan-git/financial-tracker">SaveScoutAI</a>.</sub>
+  <sub>An open-source project from <a href="https://kardoxa.com">Kardoxa Labs</a>. Built for agentic apps that take security seriously.</sub>
 </div>

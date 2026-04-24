@@ -1,0 +1,50 @@
+# GitHub repo metadata — source of truth for the "About" panel and Topics.
+# Not read by GitHub automatically; apply via the gh CLI command at the bottom
+# of this file (or via Settings UI). Keep in sync with README claims.
+
+description: >-
+  purplegate — Red/blue-team CI gate for agentic-AI apps. Prompt-injection,
+  secrets, SAST, deps, IaC/RLS, workflow injection, MCP checks. One signed
+  GitHub Action, mapped to OWASP LLM Top 10 v2025 + MITRE ATLAS. MIT.
+
+homepage: https://sameermohan.ai/blog/posts/purplegate-purple-team-ci-for-agentic-ai.html
+
+# GitHub caps Topics at 20 — this list is exactly 20, prioritised for
+# discoverability over completeness. "security", "ai-security",
+# "llm-security", "prompt-injection" are the highest-search-volume entries.
+topics:
+  - security
+  - devsecops
+  - ci-cd
+  - github-action
+  - ai-security
+  - llm-security
+  - prompt-injection
+  - prompt-injection-detection
+  - agentic-ai
+  - owasp
+  - owasp-llm-top-10
+  - mitre-atlas
+  - sarif
+  - supply-chain-security
+  - sast
+  - secrets-scanning
+  - mcp
+  - red-team
+  - purple-team
+  - open-source
+
+# Candidate topics we chose NOT to use in the first 20 (room to swap later):
+#   agents, ai-safety, slsa, semgrep, gitleaks, trufflehog, osv-scanner,
+#   zizmor, checkov, github-actions, mcp-server, supabase, fastapi,
+#   blue-team, security-tools
+
+# ─── Apply all of the above in one shot ──────────────────────────────────────
+# (once the repo exists on GitHub)
+#
+#   gh repo edit sameermohan-git/purplegate \
+#     --description "purplegate — Red/blue-team CI gate for agentic-AI apps. Prompt-injection, secrets, SAST, deps, IaC/RLS, workflow injection, MCP checks. One signed GitHub Action, mapped to OWASP LLM Top 10 v2025 + MITRE ATLAS. MIT." \
+#     --homepage    "https://sameermohan.ai/blog/posts/purplegate-purple-team-ci-for-agentic-ai.html" \
+#     --add-topic   security,devsecops,ci-cd,github-action,ai-security,llm-security,prompt-injection,prompt-injection-detection,agentic-ai,owasp,owasp-llm-top-10,mitre-atlas,sarif,supply-chain-security,sast,secrets-scanning,mcp,red-team,purple-team,open-source
+#
+# To replace (not append) the topic list, add: --clear-topics before --add-topic.
