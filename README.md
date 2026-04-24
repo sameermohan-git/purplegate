@@ -27,9 +27,8 @@
 <br />
 
 <img src="https://img.shields.io/badge/RUNTIME-DOCKER-2496ed?style=for-the-badge&labelColor=424242&logo=docker&logoColor=white" alt="docker" />
-<img src="https://img.shields.io/badge/SUPPLY%20CHAIN-COSIGN%20SIGNED-2e7d32?style=for-the-badge&labelColor=424242" alt="cosign signed" />
 <img src="https://img.shields.io/badge/REPORT-SARIF%202.1.0-f57c00?style=for-the-badge&labelColor=424242" alt="SARIF 2.1.0" />
-<img src="https://img.shields.io/badge/SLSA-LEVEL%203-f5a623?style=for-the-badge&labelColor=424242" alt="SLSA L3" />
+<img src="https://img.shields.io/badge/SUPPLY%20CHAIN-SHA--PINNED-7b7b7b?style=for-the-badge&labelColor=424242" alt="SHA-pinned" />
 
 </div>
 
@@ -46,15 +45,15 @@
 
 <p align="center">
   <code>uses: sameermohan-git/purplegate@&lt;sha&gt;</code> &nbsp;|&nbsp;
-  <code>docker run ghcr.io/sameermohan-git/purplegate:v1</code> &nbsp;|&nbsp;
-  <a href="https://github.com/sameermohan-git/purplegate/actions/workflows/self-test.yml"><strong>Live self-test →</strong></a>
+  <a href="https://github.com/sameermohan-git/purplegate/actions"><strong>Actions →</strong></a>
+  &nbsp;|&nbsp;
+  <a href="docs/QUICKSTART.md"><strong>Quickstart →</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/sameermohan-git/purplegate/releases"><img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2" alt="release"/></a>
+  <img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2&include_prereleases" alt="release"/>
   <img src="https://img.shields.io/badge/tests-37%20passing-brightgreen" alt="tests"/>
-  <a href="https://securityscorecards.dev/viewer/?uri=github.com/sameermohan-git/purplegate"><img src="https://img.shields.io/ossf-scorecard/github.com/sameermohan-git/purplegate?label=scorecard" alt="scorecard"/></a>
-  <img src="https://img.shields.io/badge/latency-%3C4min-blue" alt="latency"/>
+  <img src="https://img.shields.io/badge/status-alpha-yellow" alt="alpha"/>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"/></a>
 </p>
 
@@ -78,7 +77,7 @@ Agentic-AI apps are a new class of attack surface. Traditional SAST misses the L
 | Missing Supabase RLS | `CREATE TABLE public.transactions` without `ENABLE ROW LEVEL SECURITY` | custom static check |
 | Workflow command injection | `${{ github.event.issue.title }}` inside a `run:` step | wraps [zizmor](https://github.com/zizmorcore/zizmor) |
 | Live credential in git | a real `sk_live_...` committed today | [trufflehog](https://github.com/trufflesecurity/trufflehog) `--only-verified` |
-| Vulnerable MCP SDK | pinned version missing the Apr 2026 Anthropic MCP RCE fix | vendored advisory feed |
+| Vulnerable MCP SDK | `mcp-remote` pinned < 0.1.16 (CVE-2025-6514, CVSS 9.7), `@modelcontextprotocol/server-filesystem` < 2025.7.1 (CVE-2025-53109), `mcp` PyPI < 1.23.0 (CVE-2025-66416), plus 7 more | vendored GHSA/NVD advisory list in `src/probes/mcp.py` |
 | Generic advice leak | "RRSPs are generally good" from a finance app that should only answer about user data | judge rubric v1 |
 
 Every finding maps to **OWASP LLM Top 10 v2025**, **OWASP Agentic 2026**, and **MITRE ATLAS v5.4.0** — surfaced in SARIF `ruleId` so GitHub Code Scanning + downstream SIEM tools filter by framework.
@@ -145,11 +144,21 @@ Then add `.purplegate/config.yml` — see [`docs/CONFIG.md`](docs/CONFIG.md) for
 
 ## Supply-chain posture
 
-This tool's single most important property is that **it does not become the attack vector it's meant to defend against** — so consumers don't have to trust us, they can verify:
+This tool's single most important property is that **it does not become the attack vector it's meant to defend against**. The integrity story today + roadmap are both stated below, honestly:
 
-- **Docker container action.** Every scanner pinned by SHA in `Dockerfile`; no `pip install` / `npm install` at runtime.
-- **Every third-party `uses:` pinned by 40-char commit SHA** — never by tag. Mar 2025 (tj-actions) and Mar 2026 (trivy-action) taught us why.
-- **Signed releases.** Sigstore attestation via `actions/attest-build-provenance` + cosign keyless + SLSA L3 provenance + SBOM (Syft).
+**Shipping today (alpha)**
+
+- **Docker container action that builds from source on every run.** The consumer pins `uses: …@<commit-sha>` — that commit's `Dockerfile` + tree is the entire trust boundary. No separate image digest to track.
+- **Every scanner binary in the image is pinned to a specific version and SHA256-verified** against upstream checksums (gitleaks, trufflehog, syft, actionlint) or a locally-computed SHA256 anyone can reproduce (osv-scanner). Python scanners (semgrep, checkov, zizmor, pip-audit) are pinned to exact versions via isolated pipx venvs.
+- **Every third-party `uses:` in our own workflows pinned by 40-char commit SHA** — never by tag. Mar 2025 (tj-actions) and Mar 2026 (trivy-action) taught us why.
+- **License manifest** for every bundled binary at [`LICENSE-3RD-PARTY.md`](LICENSE-3RD-PARTY.md), including the AGPL-3.0 trufflehog posture.
+
+**Shipping at v1.0 (pipeline wired, not yet cut)**
+
+- Pre-built image on GHCR with cosign keyless signature, so consumers can switch from SHA-pinned source build to `@sha256:<digest>` + `gh attestation verify` for instant pulls.
+- SLSA L3 build provenance via `actions/attest-build-provenance` + `slsa-framework/slsa-github-generator`.
+- SBOM (Syft SPDX + CycloneDX) attached to every release artifact.
+- OSSF Scorecard ≥ 8/10 enforced as a release gate.
 - **Scorecard ≥ 8/10** target; drops below 7 block releases.
 - **Verify before first use:**
   ```bash

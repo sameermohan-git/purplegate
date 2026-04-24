@@ -28,9 +28,8 @@
 <br />
 
 <img src="https://img.shields.io/badge/RUNTIME-DOCKER-2496ed?style=for-the-badge&labelColor=424242&logo=docker&logoColor=white" alt="docker" />
-<img src="https://img.shields.io/badge/SUPPLY%20CHAIN-COSIGN%20SIGNED-2e7d32?style=for-the-badge&labelColor=424242" alt="cosign signed" />
 <img src="https://img.shields.io/badge/REPORT-SARIF%202.1.0-f57c00?style=for-the-badge&labelColor=424242" alt="SARIF 2.1.0" />
-<img src="https://img.shields.io/badge/SLSA-LEVEL%203-f5a623?style=for-the-badge&labelColor=424242" alt="SLSA L3" />
+<img src="https://img.shields.io/badge/SUPPLY%20CHAIN-SHA--PINNED-7b7b7b?style=for-the-badge&labelColor=424242" alt="SHA-pinned" />
 
 </div>
 
@@ -48,14 +47,13 @@
 <p align="center">
   <code>uses: sameermohan-git/purplegate@&lt;sha&gt;</code> &nbsp;|&nbsp;
   <code>docker run ghcr.io/sameermohan-git/purplegate:v1</code> &nbsp;|&nbsp;
-  <a href="https://github.com/sameermohan-git/purplegate/actions/workflows/self-test.yml"><strong>在线自测 →</strong></a>
+  <a href="https://github.com/sameermohan-git/purplegate/actions"><strong>在线自测 →</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/sameermohan-git/purplegate/releases"><img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2" alt="release"/></a>
+  <a href="https://github.com/sameermohan-git/purplegate/releases"><img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2&include_prereleases" alt="release"/></a>
   <img src="https://img.shields.io/badge/tests-37%20passing-brightgreen" alt="tests"/>
-  <a href="https://securityscorecards.dev/viewer/?uri=github.com/sameermohan-git/purplegate"><img src="https://img.shields.io/ossf-scorecard/github.com/sameermohan-git/purplegate?label=scorecard" alt="scorecard"/></a>
-  <img src="https://img.shields.io/badge/latency-%3C4min-blue" alt="latency"/>
+  <img src="https://img.shields.io/badge/status-alpha-yellow" alt="alpha"/>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"/></a>
 </p>
 

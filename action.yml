@@ -71,7 +71,12 @@ outputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/sameermohan-git/purplegate:latest
+  # Build from the repo's Dockerfile on every invocation. Integrity comes
+  # from the commit SHA the consumer pinned in their `uses:` line.
+  # Once we cut a signed GHCR release (release.yml handles this), this line
+  # flips to `image: docker://ghcr.io/sameermohan-git/purplegate@sha256:…`
+  # for instant pulls + cosign verification.
+  image: Dockerfile
   args:
     - --config=${{ inputs.config }}
     - --scan-paths=${{ inputs.scan-paths }}
