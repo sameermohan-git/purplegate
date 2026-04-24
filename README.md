@@ -14,7 +14,7 @@
 <br />
 <br />
 
-<img src="assets/logo.svg" alt="purplegate" width="220" />
+<img src="assets/logo.png" alt="purplegate" width="220" />
 
 <br />
 <br />
