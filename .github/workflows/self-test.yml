@@ -75,7 +75,10 @@ jobs:
       - name: Run orchestrator against ${{ matrix.fixture }}
         run: |
           cd tests/fixtures/${{ matrix.fixture }}
-          python -m src.orchestrator \
+          # Override GITHUB_WORKSPACE so the orchestrator treats this fixture
+          # directory as the repo root (otherwise it would scan the
+          # purplegate repo itself, not the fixture).
+          GITHUB_WORKSPACE="$(pwd)" python -m src.orchestrator \
             --config .purplegate/config.yml \
             --allowlist .purplegate/allowlist.yml \
             --fail-on none \
