@@ -28,6 +28,17 @@ class TestIacSupabaseRls:
         receipts_flags = [f for f in findings if "receipts" in f.title.lower()]
         assert receipts_flags == []
 
+    def test_double_quoted_policy_name_recognized(self, make_context):
+        """invoices table in migration 004 has RLS + policies whose names are
+        double-quoted with spaces ("Users can view their own invoices").
+        Regression: the policy-name pattern previously used `\\S+` which
+        broke on the first internal space, producing a false-positive
+        rls-enabled-without-policy finding on real Supabase migrations."""
+        ctx = make_context("vuln_supabase_sql")
+        findings = IacProbe(ctx).run()
+        invoices_flags = [f for f in findings if "invoices" in f.title.lower()]
+        assert invoices_flags == []
+
     def test_clean_app_produces_zero(self, make_context):
         ctx = make_context("clean_app")
         findings = IacProbe(ctx).run()

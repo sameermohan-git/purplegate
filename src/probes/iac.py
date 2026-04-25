@@ -22,6 +22,10 @@ from src.probes.base import BaseProbe
 
 log = logging.getLogger(__name__)
 
+# Schema prefix is optional; we only flag tables in the `public` schema for
+# RLS coverage (other schemas like `storage` are managed by Supabase itself).
+# But policies CAN reference tables without a schema prefix or with one — we
+# strip any prefix and capture only the table name.
 _CREATE_TABLE_RE = re.compile(
     r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?([\w\"`]+)",
     re.IGNORECASE,
@@ -30,8 +34,20 @@ _RLS_ENABLE_RE = re.compile(
     r"ALTER\s+TABLE\s+(?:public\.)?([\w\"`]+)\s+ENABLE\s+ROW\s+LEVEL\s+SECURITY",
     re.IGNORECASE,
 )
+# CREATE POLICY policy_name ON [schema.]table_name FOR …
+# Policy name can be:
+#   - bare identifier:        my_policy
+#   - double-quoted string:   "Users can view their own uploads"  (may contain spaces)
+#   - backtick identifier:    `policy_name`  (rare in Postgres)
+# Whitespace between name and `ON` may include a newline.
+# Schema prefix on the table is optional; if present we discard it and capture
+# only the table name.
 _CREATE_POLICY_RE = re.compile(
-    r"CREATE\s+POLICY\s+\S+\s+ON\s+(?:public\.)?([\w\"`]+)",
+    r'CREATE\s+POLICY\s+'
+    r'(?:"[^"]+"|`[^`]+`|\w+)'        # policy name (quoted or bare)
+    r'\s+ON\s+'
+    r'(?:\w+\.)?'                     # optional schema prefix
+    r'(["`]?\w+["`]?)',               # captured table name
     re.IGNORECASE,
 )
 
