@@ -28,7 +28,7 @@ jobs:
       image-digest: ${{ steps.build-push.outputs.digest }}
       image-ref: ghcr.io/${{ github.repository }}
     steps:
-      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40  # v2.12.2
+      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40  # v2.19.0
         with:
           egress-policy: audit
 
@@ -116,7 +116,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40  # v2.12.2
+      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40  # v2.19.0
         with:
           egress-policy: audit
 
