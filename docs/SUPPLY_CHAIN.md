@@ -141,10 +141,10 @@ Everything we claim is verifiable. None of it is taken on trust.
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
   ```
 - **Build provenance** — `gh attestation verify oci://ghcr.io/sameermohan-git/purplegate:vX.Y.Z --owner sameermohan-git`.
-- **SBOMs (SPDX + CycloneDX)** — JSON files attach to each GitHub Release; one `.cosign.bundle` per SBOM attaches alongside (Sigstore new-bundle format: signature + Fulcio cert + Rekor inclusion proof in a single file). Verify with:
+- **SBOMs (SPDX + CycloneDX)** — JSON files attach to each GitHub Release; one `.sigstore` per SBOM attaches alongside (Sigstore new-bundle format: signature + Fulcio cert + Rekor inclusion proof in a single file). Verify with:
   ```bash
   cosign verify-blob \
-    --bundle sbom.spdx.json.cosign.bundle \
+    --bundle sbom.spdx.json.sigstore \
     --new-bundle-format \
     --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.github/workflows/release\.yml@.+' \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com \

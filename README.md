@@ -181,10 +181,10 @@ This tool's single most important property is that **it does not become the atta
     --owner sameermohan-git
   ```
   Successful verification proves the image was built by `release.yml@refs/tags/v0.1.0-alpha.9` on a `github-hosted` runner.
-- **SBOMs (SPDX + CycloneDX) signed via `cosign sign-blob` keyless** — both `sbom.spdx.json` and `sbom.cdx.json` ship alongside a `.cosign.bundle` (Sigstore new-bundle format: signature + Fulcio cert + Rekor inclusion proof in one file) on every GitHub Release. Verify with:
+- **SBOMs (SPDX + CycloneDX) signed via `cosign sign-blob` keyless** — both `sbom.spdx.json` and `sbom.cdx.json` ship alongside a `.sigstore` (Sigstore new-bundle format: signature + Fulcio cert + Rekor inclusion proof in one file) on every GitHub Release. Verify with:
   ```bash
   cosign verify-blob \
-    --bundle sbom.spdx.json.cosign.bundle \
+    --bundle sbom.spdx.json.sigstore \
     --new-bundle-format \
     --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.github/workflows/release\.yml@.+' \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
