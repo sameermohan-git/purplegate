@@ -28,7 +28,9 @@
 
 <img src="https://img.shields.io/badge/RUNTIME-DOCKER-2496ed?style=for-the-badge&labelColor=424242&logo=docker&logoColor=white" alt="docker" />
 <img src="https://img.shields.io/badge/REPORT-SARIF%202.1.0-f57c00?style=for-the-badge&labelColor=424242" alt="SARIF 2.1.0" />
-<img src="https://img.shields.io/badge/SUPPLY%20CHAIN-SHA--PINNED-7b7b7b?style=for-the-badge&labelColor=424242" alt="SHA-pinned" />
+<img src="https://img.shields.io/badge/SIGNED-COSIGN%20KEYLESS-2e7d32?style=for-the-badge&labelColor=424242&logo=sigstore&logoColor=white" alt="cosign keyless signed" />
+<img src="https://img.shields.io/badge/PROVENANCE-SLSA%20L3-f5a623?style=for-the-badge&labelColor=424242" alt="SLSA Level 3" />
+<img src="https://img.shields.io/badge/SBOM-SPDX%20%2B%20CYCLONEDX-1565c0?style=for-the-badge&labelColor=424242" alt="SBOM SPDX + CycloneDX" />
 
 </div>
 
@@ -44,14 +46,14 @@
 </div>
 
 <p align="center">
-  <code>uses: sameermohan-git/purplegate@&lt;sha&gt;</code> &nbsp;|&nbsp;
-  <a href="https://github.com/sameermohan-git/purplegate/actions"><strong>Actions →</strong></a>
+  <code>uses: sameermohan-git/purplegate@v0.1.0-alpha</code> &nbsp;|&nbsp;
+  <a href="https://github.com/sameermohan-git/purplegate/pkgs/container/purplegate"><strong>GHCR image →</strong></a>
   &nbsp;|&nbsp;
   <a href="docs/QUICKSTART.md"><strong>Quickstart →</strong></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2&include_prereleases" alt="release"/>
+  <a href="https://github.com/sameermohan-git/purplegate/releases"><img src="https://img.shields.io/github/v/release/sameermohan-git/purplegate?display_name=tag&sort=semver&label=release&color=7b1fa2&include_prereleases" alt="release"/></a>
   <img src="https://img.shields.io/badge/tests-37%20passing-brightgreen" alt="tests"/>
   <img src="https://img.shields.io/badge/status-alpha-yellow" alt="alpha"/>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"/></a>
@@ -101,7 +103,7 @@ jobs:
         with: { egress-policy: audit }
       - uses: actions/checkout@<sha>
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: sameermohan-git/purplegate@<sha>
+      - uses: sameermohan-git/purplegate@v0.1.0-alpha   # or pin by 40-char commit SHA
         with:
           config: .purplegate/config.yml
           fail-on: high
@@ -144,21 +146,33 @@ Then add `.purplegate/config.yml` — see [`docs/CONFIG.md`](docs/CONFIG.md) for
 
 ## Supply-chain posture
 
-This tool's single most important property is that **it does not become the attack vector it's meant to defend against**. The integrity story today + roadmap are both stated below, honestly:
+This tool's single most important property is that **it does not become the attack vector it's meant to defend against**. Consumers do not have to trust us — they can verify.
 
-**Shipping today (alpha)**
+**Shipping today** (verified on tag `v0.1.0-alpha`, image digest [`sha256:27ab459c…`](https://github.com/sameermohan-git/purplegate/pkgs/container/purplegate))
 
-- **Docker container action that builds from source on every run.** The consumer pins `uses: …@<commit-sha>` — that commit's `Dockerfile` + tree is the entire trust boundary. No separate image digest to track.
-- **Every scanner binary in the image is pinned to a specific version and SHA256-verified** against upstream checksums (gitleaks, trufflehog, syft, actionlint) or a locally-computed SHA256 anyone can reproduce (osv-scanner). Python scanners (semgrep, checkov, zizmor, pip-audit) are pinned to exact versions via isolated pipx venvs.
+- **Multi-arch Docker image** (`linux/amd64` + `linux/arm64`) published to `ghcr.io/sameermohan-git/purplegate`. Pin by digest:
+  ```yaml
+  uses: sameermohan-git/purplegate@v0.1.0-alpha   # tag works because tags are signed
+  # or, for direct image consumption:
+  # docker pull ghcr.io/sameermohan-git/purplegate@sha256:27ab459c…
+  ```
+- **Cosign keyless signature** on every published image (Sigstore + Rekor transparency log).
+- **SLSA Level 3 build provenance** via `actions/attest-build-provenance` — verifiable today:
+  ```bash
+  gh attestation verify oci://ghcr.io/sameermohan-git/purplegate@sha256:27ab459c… \
+    --owner sameermohan-git
+  ```
+  Successful verification proves the image was built by `release.yml@refs/tags/v0.1.0-alpha` from commit `fb19d953` on a `github-hosted` runner.
+- **SBOM (SPDX + CycloneDX)** attached to every GitHub release as `sbom.spdx.json` / `sbom.cdx.json`.
+- **Every scanner binary inside the image is pinned to a specific version and SHA256-verified** against upstream checksums (gitleaks, trufflehog, syft, actionlint) or a locally-computed SHA256 anyone can reproduce (osv-scanner). Python scanners (semgrep, checkov, zizmor, pip-audit) are pinned to exact versions via isolated pipx venvs.
 - **Every third-party `uses:` in our own workflows pinned by 40-char commit SHA** — never by tag. Mar 2025 (tj-actions) and Mar 2026 (trivy-action) taught us why.
 - **License manifest** for every bundled binary at [`LICENSE-3RD-PARTY.md`](LICENSE-3RD-PARTY.md), including the AGPL-3.0 trufflehog posture.
 
-**Shipping at v1.0 (pipeline wired, not yet cut)**
+**Hardening targets for v1.0**
 
-- Pre-built image on GHCR with cosign keyless signature, so consumers can switch from SHA-pinned source build to `@sha256:<digest>` + `gh attestation verify` for instant pulls.
-- SLSA L3 build provenance via `actions/attest-build-provenance` + `slsa-framework/slsa-github-generator`.
-- SBOM (Syft SPDX + CycloneDX) attached to every release artifact.
 - OSSF Scorecard ≥ 8/10 enforced as a release gate.
+- Branch protection on `main` requiring signed commits + 2 reviewers.
+- Migration of the Action's own `uses:` lines to the latest signed SHAs (Dependabot is currently proposing them).
 - **Scorecard ≥ 8/10** target; drops below 7 block releases.
 - **Verify before first use:**
   ```bash
