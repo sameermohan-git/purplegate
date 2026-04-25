@@ -31,7 +31,13 @@
 <img src="https://img.shields.io/badge/REPORT-SARIF%202.1.0-f57c00?style=for-the-badge&labelColor=424242" alt="SARIF 2.1.0" />
 <img src="https://img.shields.io/badge/SIGNED-COSIGN%20KEYLESS-2e7d32?style=for-the-badge&labelColor=424242&logo=sigstore&logoColor=white" alt="cosign keyless signed" />
 <img src="https://img.shields.io/badge/PROVENANCE-SLSA%20L3-f5a623?style=for-the-badge&labelColor=424242" alt="SLSA Level 3" />
-<img src="https://img.shields.io/badge/SBOM-SPDX%20%2B%20CYCLONEDX-1565c0?style=for-the-badge&labelColor=424242" alt="SBOM SPDX + CycloneDX" />
+<img src="https://img.shields.io/badge/SBOM-SPDX%20%2B%20CYCLONEDX%20(SIGNED)-1565c0?style=for-the-badge&labelColor=424242" alt="SBOM SPDX + CycloneDX (signed)" />
+
+<br />
+
+<a href="https://scorecard.dev/viewer/?uri=github.com/sameermohan-git/purplegate"><img src="https://api.securityscorecards.dev/projects/github.com/sameermohan-git/purplegate/badge" alt="OSSF Scorecard" /></a>
+<a href="https://github.com/sameermohan-git/purplegate/actions/workflows/codeql.yml"><img src="https://github.com/sameermohan-git/purplegate/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
+<a href="https://github.com/sameermohan-git/purplegate/actions/workflows/self-test.yml"><img src="https://github.com/sameermohan-git/purplegate/actions/workflows/self-test.yml/badge.svg" alt="self-test" /></a>
 
 </div>
 
@@ -110,6 +116,9 @@ jobs:
           llm-provider: anthropic
           llm-api-key: ${{ secrets.AUDIT_ANTHROPIC_KEY }}
           target-url: ${{ secrets.STAGING_API_URL }}
+          # Required since v0.1.0-alpha.8: Docker container actions don't get
+          # github.token in env: namespace, so the consumer passes it explicitly.
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 फिर `.purplegate/config.yml` add करें — पूरा schema [`docs/CONFIG.md`](../CONFIG.md) में। पूरा walkthrough [`docs/QUICKSTART.md`](../QUICKSTART.md) में।

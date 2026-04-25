@@ -34,20 +34,45 @@ We act accordingly.
    installed at build time with pinned versions + checksums. No `pip install`
    or `npm install` executes when a consumer runs us.
 
-6. **Every release is signed and attested.**
-   - `actions/attest-build-provenance` (Sigstore) for SLSA provenance.
+6. **Dockerfile base images pinned by sha256 digest.** `debian:12-slim` and
+   both `python:3.12.7-slim-bookworm` stages are pinned to the multi-arch
+   index digest (so `linux/amd64` and `linux/arm64` resolve to fixed,
+   reproducible bytes). Renovate proposes digest bumps; reviewers verify
+   each new digest matches an upstream-published manifest before merging.
+
+7. **Every release is signed and attested.**
+   - `actions/attest-build-provenance` (Sigstore) for SLSA L3 provenance.
    - `cosign` keyless signature on the published image.
-   - SBOM via Syft, attached to the release.
-   - SLSA L3 via `slsa-framework/slsa-github-generator`.
+   - **SBOMs (SPDX + CycloneDX) signed via `cosign sign-blob` keyless** —
+     `.sig` (raw signature) and `.pem` (Fulcio-issued certificate binding
+     the signature to the workflow's OIDC identity) attach to the GitHub
+     Release alongside the JSON SBOMs (since `v0.1.0-alpha.7`).
+   - All four release artifacts plus the image are independently verifiable.
 
-7. **OSSF Scorecard runs on our own repo on every push.** Target ≥ 8/10.
-   Any drop below 7 blocks releases until resolved.
+8. **`release.yml` permissions scoped at job level.** Top-level is
+   `contents: read`. The `build` job opts in to the four write scopes it
+   actually needs (`contents`, `packages`, `id-token`, `attestations`) and
+   each scope carries an inline comment explaining why. The `verify` job
+   is `contents: read` only.
 
-8. **Dep additions gated on upstream Scorecard ≥ 7.** Before we add any new
-   upstream dependency, we check its Scorecard. Low-score deps are rejected.
+9. **OSSF Scorecard runs on our own repo on every push.** Target ≥ 8/10.
+   Live score badge in the README points to
+   `https://scorecard.dev/viewer/?uri=github.com/sameermohan-git/purplegate`.
+   Drops below 7 should block releases (we'll enforce this once Scorecard
+   stabilizes — the project is <90 days old and Scorecard caps the
+   `Maintained` check at 0 until then).
 
-9. **Image rebuilt on every release, never on `latest`.** The `latest` tag
-   points to the current signed digest of the most recent released image.
+10. **CodeQL static analysis on every PR + push to `main`.** Queries:
+    `security-extended`. Findings flow to Security → Code scanning. We
+    additionally run Semgrep inside the runtime image for our self-test
+    suite, but CodeQL is the gate for the OSSF Scorecard SAST check.
+
+11. **Dep additions gated on upstream Scorecard ≥ 7.** Before we add any
+    new upstream dependency, we check its Scorecard. Low-score deps are
+    rejected.
+
+12. **Image rebuilt on every release, never on `latest`.** The `latest` tag
+    points to the current signed digest of the most recent released image.
 
 ## Rules we recommend for consumers
 
@@ -109,13 +134,24 @@ Pin by SHA and run on every PR. Catches risky dep additions before they merge.
 Everything we claim is verifiable. None of it is taken on trust.
 
 - **Image digest** — `docker image inspect` or the GHCR UI.
-- **Signature** — `cosign verify ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
-  --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.*'
-  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'`
-- **Provenance** — `gh attestation verify oci://...`
-- **SBOM** — attached to each GitHub release as `sbom.spdx.json` + `sbom.cdx.json`.
-- **SLSA** — provenance attestation includes SLSA level metadata.
-- **Scorecard** — https://securityscorecards.dev/viewer/?uri=github.com/sameermohan-git/purplegate
+- **Image signature** —
+  ```bash
+  cosign verify ghcr.io/sameermohan-git/purplegate:vX.Y.Z \
+    --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.github/workflows/release\.yml@.+' \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com
+  ```
+- **Build provenance** — `gh attestation verify oci://ghcr.io/sameermohan-git/purplegate:vX.Y.Z --owner sameermohan-git`.
+- **SBOMs (SPDX + CycloneDX)** — JSON files attach to each GitHub Release; `.sig` + `.pem` files attach alongside (since alpha.7). Verify with:
+  ```bash
+  cosign verify-blob \
+    --certificate sbom.spdx.json.pem \
+    --signature   sbom.spdx.json.sig \
+    --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.github/workflows/release\.yml@.+' \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+    sbom.spdx.json
+  ```
+- **SLSA level** — included as metadata in the `attest-build-provenance` predicate.
+- **Scorecard** — https://scorecard.dev/viewer/?uri=github.com/sameermohan-git/purplegate
 
 ## If something goes wrong
 

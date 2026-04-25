@@ -34,6 +34,12 @@ Out of scope (report to upstream instead):
 
 Only the latest `vN` major tag and the `main` branch are actively maintained.
 
+**Yanked tags** (do not use):
+
+| Tag | Reason |
+|-----|--------|
+| `v0.1.0-alpha.6`, `v0.1.0-alpha.7` | `action.yml` expression-context bug — fail to load on consumers. Pin to `v0.1.0-alpha.8` or later. |
+
 ## Disclosure policy
 
 - We credit reporters in release notes unless they request otherwise.
@@ -44,7 +50,10 @@ Only the latest `vN` major tag and the `main` branch are actively maintained.
 
 - Every third-party `uses:` is pinned by 40-character commit SHA.
 - Renovate/Dependabot proposes SHA bumps; reviewers verify each new SHA against an upstream signed release before merge.
-- Releases are signed (Sigstore) and accompanied by SBOM + SLSA L3 provenance.
-- OSSF Scorecard runs on every push; target ≥ 8/10. Any drop below 7 blocks releases.
+- Dockerfile base images pinned by sha256 multi-arch index digest.
+- Releases are signed (Sigstore) and accompanied by signed SBOMs (SPDX + CycloneDX, both with `.sig` + `.pem`) and SLSA L3 build provenance.
+- `release.yml` permissions are scoped at job level — top-level is `contents: read`.
+- CodeQL static analysis runs on every PR + push to `main`.
+- OSSF Scorecard runs on every push; live score badge in the README.
 
 See [`docs/SUPPLY_CHAIN.md`](docs/SUPPLY_CHAIN.md) for the full policy and how to verify our releases yourself.
