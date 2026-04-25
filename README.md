@@ -52,7 +52,7 @@
 </div>
 
 <p align="center">
-  <code>uses: sameermohan-git/purplegate@v0.1.0-alpha.8</code> &nbsp;|&nbsp;
+  <code>uses: sameermohan-git/purplegate@v0.1.0-alpha.9</code> &nbsp;|&nbsp;
   <a href="https://github.com/sameermohan-git/purplegate/pkgs/container/purplegate"><strong>GHCR image →</strong></a>
   &nbsp;|&nbsp;
   <a href="docs/QUICKSTART.md"><strong>Quickstart →</strong></a>
@@ -109,7 +109,7 @@ jobs:
         with: { egress-policy: audit }
       - uses: actions/checkout@<sha>
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: sameermohan-git/purplegate@v0.1.0-alpha.8   # or pin by 40-char commit SHA
+      - uses: sameermohan-git/purplegate@v0.1.0-alpha.9   # or pin by 40-char commit SHA
         with:
           config: .purplegate/config.yml
           fail-on: high
@@ -166,21 +166,21 @@ Then add `.purplegate/config.yml` — see [`docs/CONFIG.md`](docs/CONFIG.md) for
 
 This tool's single most important property is that **it does not become the attack vector it's meant to defend against**. Consumers do not have to trust us — they can verify.
 
-**Shipping today** (current tag `v0.1.0-alpha.8`)
+**Shipping today** (current tag `v0.1.0-alpha.9`)
 
 - **Multi-arch Docker image** (`linux/amd64` + `linux/arm64`) published to `ghcr.io/sameermohan-git/purplegate`. Pin by digest:
   ```yaml
-  uses: sameermohan-git/purplegate@v0.1.0-alpha.8   # tag works because images are cosign-signed
+  uses: sameermohan-git/purplegate@v0.1.0-alpha.9   # tag works because images are cosign-signed
   # or, for direct image consumption:
   # docker pull ghcr.io/sameermohan-git/purplegate@sha256:<digest>
   ```
 - **Cosign keyless signature** on every published image (Sigstore + Rekor transparency log).
 - **SLSA Level 3 build provenance** via `actions/attest-build-provenance` — verify before first use:
   ```bash
-  gh attestation verify oci://ghcr.io/sameermohan-git/purplegate:v0.1.0-alpha.8 \
+  gh attestation verify oci://ghcr.io/sameermohan-git/purplegate:v0.1.0-alpha.9 \
     --owner sameermohan-git
   ```
-  Successful verification proves the image was built by `release.yml@refs/tags/v0.1.0-alpha.8` on a `github-hosted` runner.
+  Successful verification proves the image was built by `release.yml@refs/tags/v0.1.0-alpha.9` on a `github-hosted` runner.
 - **SBOMs (SPDX + CycloneDX) signed via `cosign sign-blob` keyless** — both `sbom.spdx.json` and `sbom.cdx.json` ship alongside a `.cosign.bundle` (Sigstore new-bundle format: signature + Fulcio cert + Rekor inclusion proof in one file) on every GitHub Release. Verify with:
   ```bash
   cosign verify-blob \

@@ -38,7 +38,8 @@ Only the latest `vN` major tag and the `main` branch are actively maintained.
 
 | Tag | Reason |
 |-----|--------|
-| `v0.1.0-alpha.6`, `v0.1.0-alpha.7` | `action.yml` expression-context bug — fail to load on consumers. Pin to `v0.1.0-alpha.8` or later. |
+| `v0.1.0-alpha.6`, `v0.1.0-alpha.7` | `action.yml` expression-context bug — fail to load on consumers. Pin to `v0.1.0-alpha.9` or later. |
+| `v0.1.0-alpha.8` | Image and action are functional, but the SBOM signing step failed under cosign 4.x's new bundle format, so no GitHub Release page was created and no signed SBOMs were attached. Use `v0.1.0-alpha.9` for full release artifacts. |
 
 ## Disclosure policy
 
