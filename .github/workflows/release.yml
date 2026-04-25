@@ -89,14 +89,14 @@ jobs:
           push-to-registry: true
 
       - name: Generate SBOM (SPDX)
-        uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9  # v0.20.1
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0.24.0
         with:
           image: ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }}
           format: spdx-json
           output-file: sbom.spdx.json
 
       - name: Generate SBOM (CycloneDX)
-        uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9  # v0.20.1
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0.24.0
         with:
           image: ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }}
           format: cyclonedx-json
