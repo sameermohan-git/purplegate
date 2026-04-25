@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.1.0-alpha.9] - 2026-04-25
+
+### Fixed
+- **SBOM signing step in `release.yml` failed under cosign 4.x.** `cosign-installer@v4.1.1` ships cosign 4.x, which defaults to `--new-bundle-format=true`. In that mode `--output-signature` and `--output-certificate` are silently ignored, and cosign expects `--bundle <file>` instead — so the alpha.7 / alpha.8 release runs erred at this step with `create bundle file: open : no such file or directory`. The build job failed before the "Attach SBOMs to release" step ran, so neither alpha.7 nor alpha.8 produced a GitHub Release page (the images themselves did publish + sign + attest correctly).
+- Switched both `cosign sign-blob` commands to `--bundle <file>.cosign.bundle`, the Sigstore new-bundle format that packs signature + Fulcio certificate + Rekor inclusion proof in a single self-contained JSON. Updated README and `docs/SUPPLY_CHAIN.md` with the corresponding `cosign verify-blob --bundle ... --new-bundle-format` verification command.
+
 ## [0.1.0-alpha.8] - 2026-04-25
 
 ### Fixed
