@@ -53,8 +53,15 @@ jobs:
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf  # v6.0.0
         with:
           images: ghcr.io/${{ github.repository }}
+          # Push BOTH the v-prefixed and unprefixed semver tags so consumers
+          # can use either form. docker/metadata-action's {{version}} strips
+          # the leading `v` from the git tag (so `v0.1.0-alpha.4` becomes the
+          # OCI tag `0.1.0-alpha.4`); the second line below adds the
+          # `v0.1.0-alpha.4` form as well. Keeps `gh attestation verify
+          # oci://...:v0.1.0-alpha.4` working without surprise.
           tags: |
             type=semver,pattern={{version}}
+            type=semver,pattern=v{{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
