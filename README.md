@@ -103,13 +103,22 @@ jobs:
         with: { egress-policy: audit }
       - uses: actions/checkout@<sha>
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: sameermohan-git/purplegate@v0.1.0-alpha   # or pin by 40-char commit SHA
+      - uses: sameermohan-git/purplegate@v0.1.0-alpha.4   # or pin by 40-char commit SHA
         with:
           config: .purplegate/config.yml
           fail-on: high
           llm-provider: anthropic
           llm-api-key: ${{ secrets.AUDIT_ANTHROPIC_KEY }}
           target-url: ${{ secrets.STAGING_API_URL }}
+
+      # Optional: keep the JSON / SARIF / Markdown reports for offline analysis.
+      # purplegate writes them to <workspace>/.purplegate-reports/ during the run.
+      - uses: actions/upload-artifact@<sha>
+        if: always()
+        with:
+          name: purplegate-reports
+          path: .purplegate-reports/
+          if-no-files-found: warn
 ```
 
 Then add `.purplegate/config.yml` — see [`docs/CONFIG.md`](docs/CONFIG.md) for the full schema. Full walkthrough in [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
