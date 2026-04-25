@@ -27,7 +27,7 @@ inputs:
     required: false
     default: none
   llm-api-key:
-    description: API key for the LLM provider. Pass via ${{ secrets.* }}.
+    description: API key for the LLM provider. Pass from a workflow secret, e.g. secrets.AUDIT_ANTHROPIC_KEY.
     required: false
     default: ""
   llm-model:
@@ -58,6 +58,10 @@ inputs:
     description: Path to allowlist YAML file.
     required: false
     default: .purplegate/allowlist.yml
+  github-token:
+    description: GitHub token used for SARIF upload + PR comments. Pass secrets.GITHUB_TOKEN from the consumer workflow.
+    required: false
+    default: ""
 
 outputs:
   report-path:
@@ -92,4 +96,8 @@ runs:
     - --allowlist=${{ inputs.allowlist }}
   env:
     PURPLEGATE_LLM_API_KEY: ${{ inputs.llm-api-key }}
-    GITHUB_TOKEN: ${{ github.token }}
+    # Docker container actions don't get a `github.token` expression in the
+    # action's `env:` context — that namespace is only available in workflow
+    # files. Consumers must pass the token explicitly via the `github-token`
+    # input (see README quickstart for the `secrets.GITHUB_TOKEN` example).
+    GITHUB_TOKEN: ${{ inputs.github-token }}
