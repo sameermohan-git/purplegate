@@ -160,23 +160,44 @@ def main(  # noqa: PLR0913 — Click entry
     )
     report.refresh_stats()
 
-    out_dir = Path("/tmp/reports")
-    out_dir.mkdir(parents=True, exist_ok=True)
+    # Reports get written in two places:
+    #   1. /tmp/reports/      — kept for backward-compat with anything that
+    #                            reads from that path.
+    #   2. <workspace>/.purplegate-reports/ — INSIDE the consumer's checkout,
+    #                            so a downstream `actions/upload-artifact`
+    #                            step can pick them up. Docker-container
+    #                            Actions can't add post-steps to upload
+    #                            themselves; the workspace-write is the
+    #                            workaround.
     formats = {f.strip() for f in report_format.split(",") if f.strip()}
-    report_path = out_dir / "audit.md"
+    pr_max = merged.get("reporting", {}).get("pr_comment_max_findings", 10)
 
-    if "markdown" in formats:
-        pr_max = merged.get("reporting", {}).get("pr_comment_max_findings", 10)
-        report_path.write_text(render_markdown(report, max_findings=pr_max))
-    if "sarif" in formats:
-        (out_dir / "audit.sarif").write_text(render_sarif(report))
-    if "json" in formats:
-        (out_dir / "audit.json").write_text(
-            report.model_dump_json(indent=2, exclude_none=True)
-        )
+    out_dirs = [Path("/tmp/reports"), workspace / ".purplegate-reports"]
+    for out_dir in out_dirs:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    primary_md = out_dirs[0] / "audit.md"
+    primary_sarif = out_dirs[0] / "audit.sarif"
 
-    _emit_github_outputs(report, report_path)
-    _emit_step_summary(report_path)
+    md_text = render_markdown(report, max_findings=pr_max) if "markdown" in formats else ""
+    sarif_text = render_sarif(report) if "sarif" in formats else ""
+    json_text = report.model_dump_json(indent=2, exclude_none=True) if "json" in formats else ""
+
+    for out_dir in out_dirs:
+        if md_text:
+            (out_dir / "audit.md").write_text(md_text)
+        if sarif_text:
+            (out_dir / "audit.sarif").write_text(sarif_text)
+        if json_text:
+            (out_dir / "audit.json").write_text(json_text)
+
+    _emit_github_outputs(report, primary_md)
+    _emit_step_summary(primary_md)
+
+    if upload_sarif.lower() in ("1", "true", "yes") and sarif_text:
+        _upload_sarif_to_code_scanning(sarif_text, workspace)
+
+    if comment_on_pr.lower() in ("1", "true", "yes") and md_text:
+        _post_pr_comment(md_text, report)
 
     try:
         enforce_gate(report, fail_on)
@@ -219,6 +240,136 @@ def _emit_step_summary(report_path: Path) -> None:
         return
     with open(summary, "a") as fh:
         fh.write(report_path.read_text())
+
+
+# ── SARIF upload to GitHub Code Scanning ─────────────────────────────────────
+
+
+def _upload_sarif_to_code_scanning(sarif_text: str, workspace: Path) -> None:
+    """POST the SARIF to /repos/{owner}/{repo}/code-scanning/sarifs.
+
+    Findings show up on the PR's "Files changed" tab as inline annotations
+    AND in the repo's Security → Code Scanning view.
+
+    Required env (provided by GH Actions): GITHUB_TOKEN, GITHUB_REPOSITORY,
+    GITHUB_SHA, GITHUB_REF. Token must have `security-events: write`
+    permission. Logs + skips silently on any missing piece — never breaks
+    the build.
+    """
+    import base64
+    import gzip
+
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    sha = os.environ.get("GITHUB_SHA")
+    ref = os.environ.get("GITHUB_REF")
+    if not all([token, repo, sha, ref]):
+        log.info("SARIF upload: missing GH context env; skipping")
+        return
+
+    try:
+        import httpx
+    except ImportError:
+        log.warning("SARIF upload: httpx not available; skipping")
+        return
+
+    encoded = base64.b64encode(gzip.compress(sarif_text.encode("utf-8"))).decode("ascii")
+    url = f"https://api.github.com/repos/{repo}/code-scanning/sarifs"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    payload = {
+        "commit_sha": sha,
+        "ref": ref,
+        "sarif": encoded,
+        "tool_name": "purplegate",
+    }
+    try:
+        resp = httpx.post(url, headers=headers, json=payload, timeout=30)
+    except httpx.HTTPError as exc:
+        log.warning("SARIF upload failed (network): %s", exc)
+        return
+    if resp.status_code in (200, 202):
+        body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+        sarif_id = body.get("id", "<no-id>")
+        log.info("SARIF upload: accepted (id=%s)", sarif_id)
+    else:
+        # Most common: 403 if security-events permission missing on the
+        # workflow, or 422 if the repo's Code Scanning is disabled. Both
+        # are configuration issues, not tool failures — log loudly.
+        log.warning(
+            "SARIF upload: HTTP %d. Body: %s",
+            resp.status_code, resp.text[:300],
+        )
+
+
+# ── PR comment posting ───────────────────────────────────────────────────────
+
+
+def _post_pr_comment(markdown_text: str, report: Report) -> None:
+    """POST the Markdown report to /repos/{owner}/{repo}/issues/{n}/comments.
+
+    Only runs on `pull_request` events; on push to a branch there's no PR
+    number to comment on. Token needs `pull-requests: write`.
+    """
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    event_path = os.environ.get("GITHUB_EVENT_PATH")
+    event_name = os.environ.get("GITHUB_EVENT_NAME", "")
+    if not all([token, repo, event_path]):
+        log.info("PR comment: missing GH context env; skipping")
+        return
+    if event_name not in ("pull_request", "pull_request_target"):
+        log.info("PR comment: event=%s is not a PR; skipping", event_name)
+        return
+
+    try:
+        import json as _json
+        with open(event_path) as fh:
+            event = _json.load(fh)
+        pr_number = event.get("pull_request", {}).get("number") or event.get("number")
+    except (OSError, ValueError) as exc:
+        log.warning("PR comment: could not read GITHUB_EVENT_PATH: %s", exc)
+        return
+    if not pr_number:
+        log.info("PR comment: no PR number in event payload; skipping")
+        return
+
+    try:
+        import httpx
+    except ImportError:
+        log.warning("PR comment: httpx not available; skipping")
+        return
+
+    # Guard against very long reports — GitHub caps comment body at 65,536 chars.
+    body = markdown_text
+    if len(body) > 60000:
+        body = body[:60000] + "\n\n_…report truncated; full version in workflow artifacts._"
+
+    # Tag the comment with a stable marker so we can later choose to update
+    # rather than append on subsequent runs (deferred to a follow-up).
+    body = "<!-- purplegate-report-v1 -->\n" + body
+
+    url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    try:
+        resp = httpx.post(url, headers=headers, json={"body": body}, timeout=30)
+    except httpx.HTTPError as exc:
+        log.warning("PR comment failed (network): %s", exc)
+        return
+    if resp.status_code in (200, 201):
+        log.info("PR comment: posted on PR #%s", pr_number)
+    else:
+        log.warning(
+            "PR comment: HTTP %d. Body: %s",
+            resp.status_code, resp.text[:300],
+        )
 
 
 if __name__ == "__main__":

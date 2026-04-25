@@ -26,6 +26,7 @@ Thumbs.db
 # Runtime outputs (never commit these — they can contain secrets from failing scans)
 /reports/
 /tmp/
+.purplegate-reports/
 *.sarif
 *.spdx.json
 *.cdx.json
