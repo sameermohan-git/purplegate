@@ -113,27 +113,29 @@ jobs:
           format: cyclonedx-json
           output-file: sbom.cdx.json
 
-      # Sign each SBOM as a detached blob signature via cosign keyless. Emits
-      # <file>.sig (raw signature) + <file>.pem (Fulcio-issued cert binding
-      # the signature to this workflow's OIDC identity). Consumers verify via:
+      # Sign each SBOM as a detached blob signature via cosign keyless. cosign
+      # 4.x defaults to the new Sigstore bundle format — a single self-
+      # contained JSON file holding the signature, the Fulcio-issued
+      # certificate, and the inclusion proof from Rekor. The legacy
+      # --output-signature / --output-certificate flags are deprecated and
+      # silently ignored under --new-bundle-format=true. Emits one
+      # `<file>.cosign.bundle` per SBOM. Consumers verify with:
       #   cosign verify-blob \
-      #     --certificate sbom.spdx.json.pem \
-      #     --signature   sbom.spdx.json.sig \
+      #     --bundle sbom.spdx.json.cosign.bundle \
+      #     --new-bundle-format \
       #     --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.github/workflows/release\.yml@.+' \
       #     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
       #     sbom.spdx.json
       - name: Sign SBOM (SPDX)
         run: |
           cosign sign-blob --yes \
-            --output-signature sbom.spdx.json.sig \
-            --output-certificate sbom.spdx.json.pem \
+            --bundle sbom.spdx.json.cosign.bundle \
             sbom.spdx.json
 
       - name: Sign SBOM (CycloneDX)
         run: |
           cosign sign-blob --yes \
-            --output-signature sbom.cdx.json.sig \
-            --output-certificate sbom.cdx.json.pem \
+            --bundle sbom.cdx.json.cosign.bundle \
             sbom.cdx.json
 
       - name: Attach SBOMs + signatures to release
@@ -142,11 +144,9 @@ jobs:
         with:
           files: |
             sbom.spdx.json
-            sbom.spdx.json.sig
-            sbom.spdx.json.pem
+            sbom.spdx.json.cosign.bundle
             sbom.cdx.json
-            sbom.cdx.json.sig
-            sbom.cdx.json.pem
+            sbom.cdx.json.cosign.bundle
           generate_release_notes: true
 
   verify:
