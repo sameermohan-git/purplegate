@@ -25,13 +25,11 @@ landing here.
 Translations drift. When a translation is > 2 minor versions behind the English
 README, the flag link on the main README is struck through until a refresh PR lands.
 
-**Known drift as of 2026-04-24:** the 10 shipped translations were generated
-from the English README at commit `bd617bb`. English has since been updated
-to split supply-chain claims into "shipping today" vs "shipping at v1.0"
-(cosign-signed image, SLSA L3 provenance). Translations still describe
-those as if they ship today. Until the drift is closed, **English is the
-authoritative version on supply-chain claims** — refer to `../../README.md`
-from any translation.
+**Translation freshness:** translations are kept loosely in sync with English
+via mechanical badge / link updates per release. Body prose lags by one or
+two minor versions — when English describes a claim more nuanced than a
+translation, the English version at the time of the release is authoritative.
+Refer to `../../README.md` from any translation if details diverge.
 
 ## Why manual translations, not LLM auto-translation
 
