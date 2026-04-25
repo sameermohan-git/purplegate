@@ -10,11 +10,10 @@ on:
         description: "Tag to release (e.g. v1.0.0)"
         required: true
 
+# Top-level defaults to read-only; jobs below opt in to write scopes only
+# where they need them (OSSF Scorecard Token-Permissions check).
 permissions:
-  contents: write
-  packages: write
-  id-token: write        # cosign keyless + attest-build-provenance
-  attestations: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -24,6 +23,11 @@ jobs:
   build:
     name: Build, sign, and publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write       # attach SBOMs + signatures to the GitHub Release
+      packages: write       # push image to GHCR
+      id-token: write       # cosign keyless + attest-build-provenance OIDC
+      attestations: write   # actions/attest-build-provenance
     outputs:
       image-digest: ${{ steps.build-push.outputs.digest }}
       image-ref: ghcr.io/${{ github.repository }}
@@ -109,19 +113,48 @@ jobs:
           format: cyclonedx-json
           output-file: sbom.cdx.json
 
-      - name: Attach SBOMs to release
+      # Sign each SBOM as a detached blob signature via cosign keyless. Emits
+      # <file>.sig (raw signature) + <file>.pem (Fulcio-issued cert binding
+      # the signature to this workflow's OIDC identity). Consumers verify via:
+      #   cosign verify-blob \
+      #     --certificate sbom.spdx.json.pem \
+      #     --signature   sbom.spdx.json.sig \
+      #     --certificate-identity-regexp 'https://github.com/sameermohan-git/purplegate/.github/workflows/release\.yml@.+' \
+      #     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+      #     sbom.spdx.json
+      - name: Sign SBOM (SPDX)
+        run: |
+          cosign sign-blob --yes \
+            --output-signature sbom.spdx.json.sig \
+            --output-certificate sbom.spdx.json.pem \
+            sbom.spdx.json
+
+      - name: Sign SBOM (CycloneDX)
+        run: |
+          cosign sign-blob --yes \
+            --output-signature sbom.cdx.json.sig \
+            --output-certificate sbom.cdx.json.pem \
+            sbom.cdx.json
+
+      - name: Attach SBOMs + signatures to release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8  # v2.3.2
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         with:
           files: |
             sbom.spdx.json
+            sbom.spdx.json.sig
+            sbom.spdx.json.pem
             sbom.cdx.json
+            sbom.cdx.json.sig
+            sbom.cdx.json.pem
           generate_release_notes: true
 
   verify:
     name: Post-release verification (dog-food)
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read   # cosign verify pulls a public manifest; no writes needed
     steps:
       - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40  # v2.19.0
         with:
