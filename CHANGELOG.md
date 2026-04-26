@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.1.0-alpha.10] - 2026-04-25
+
+### Changed
+- **Renamed signed-SBOM bundle file extension `.cosign.bundle` → `.sigstore`.** Same file format (Sigstore new-bundle), same content (signature + Fulcio cert + Rekor inclusion proof in one JSON), same verification command. The rename is purely so that **OSSF Scorecard's Signed-Releases check recognizes the artifacts** — Scorecard's recognized-extension list is `.sig`, `.asc`, `.intoto.jsonl`, `.sigstore`, `.dsse`, and `.cosign.bundle` is not on it. With alpha.10's new naming, Signed-Releases should lift off 0/10 over the next few releases.
+- README + `docs/SUPPLY_CHAIN.md` verification commands updated to reference `<file>.sigstore`.
+
 ## [0.1.0-alpha.9] - 2026-04-25
 
 ### Fixed
