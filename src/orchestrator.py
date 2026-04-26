@@ -243,22 +243,50 @@ def _configure_logging() -> None:
 
 
 def _emit_github_outputs(report: Report, report_path: Path) -> None:
+    """Append action outputs to $GITHUB_OUTPUT.
+
+    Best-effort: GH Actions mounts $GITHUB_OUTPUT as a root-owned file on
+    the host (`/github/file_commands/...`). Our container runs as uid 10001
+    (the non-root `purplegate` user), so this append fails with
+    PermissionError on stock GitHub-hosted runners. Action outputs are
+    optional metadata; if we can't emit them, we log and continue.
+    """
     out = os.environ.get("GITHUB_OUTPUT")
     if not out:
         return
-    with open(out, "a") as fh:
-        fh.write(f"report-path={report_path}\n")
-        fh.write(f"findings-count={report.stats.total}\n")
-        fh.write(f"critical-count={report.stats.by_severity.get('critical', 0)}\n")
-        fh.write(f"high-count={report.stats.by_severity.get('high', 0)}\n")
+    try:
+        with open(out, "a") as fh:
+            fh.write(f"report-path={report_path}\n")
+            fh.write(f"findings-count={report.stats.total}\n")
+            fh.write(f"critical-count={report.stats.by_severity.get('critical', 0)}\n")
+            fh.write(f"high-count={report.stats.by_severity.get('high', 0)}\n")
+    except (PermissionError, OSError) as exc:
+        log.warning(
+            "Cannot write action outputs to %s: %s. Outputs are skipped; "
+            "the rest of the gate continues.", out, exc,
+        )
 
 
 def _emit_step_summary(report_path: Path) -> None:
+    """Append the markdown report to $GITHUB_STEP_SUMMARY.
+
+    Best-effort: same uid-mismatch story as $GITHUB_OUTPUT. The Step
+    Summary is a presentation-only nicety; if it can't be written, we
+    log and continue. The report still ends up in the workspace mirror
+    + PR comment + SARIF upload, so the user is not losing data.
+    """
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary or not report_path.exists():
         return
-    with open(summary, "a") as fh:
-        fh.write(report_path.read_text())
+    try:
+        with open(summary, "a") as fh:
+            fh.write(report_path.read_text())
+    except (PermissionError, OSError) as exc:
+        log.warning(
+            "Cannot write step summary to %s: %s. Step Summary is skipped; "
+            "the markdown report still attaches via PR comment and the "
+            "workspace mirror.", summary, exc,
+        )
 
 
 # ── SARIF upload to GitHub Code Scanning ─────────────────────────────────────
