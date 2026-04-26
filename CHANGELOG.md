@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.1.0-alpha.12] - 2026-04-26
+
+### Fixed
+- **Two more `PermissionError` crashes uncovered after alpha.11.** alpha.11 fixed the workspace-mirror write but the orchestrator still hard-failed at `_emit_github_outputs` (`$GITHUB_OUTPUT` → `/github/file_commands/...`) and would then have failed at `_emit_step_summary` (`$GITHUB_STEP_SUMMARY`). Both files are mounted root-owned by GitHub Actions, and our container runs as uid 10001. Wrapped both writes in try/except with informative warnings; both are presentation-only and the gate now completes even when neither can be written. Markdown report still reaches the PR comment + workspace mirror; SARIF still uploads to Code Scanning.
+
 ## [0.1.0-alpha.11] - 2026-04-26
 
 ### Fixed
