@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.1.0-alpha.11] - 2026-04-26
+
+### Fixed
+- **`PermissionError` when writing the workspace report mirror on stock GitHub-hosted runners.** The orchestrator was hard-failing the gate at `out_dir.mkdir(parents=True, exist_ok=True)` when the workspace was owned by the runner's uid (typically 1001) but the container runs as our `purplegate` user (uid 10001) for hardening. The crash hit any consumer using the default workflow setup and prevented the gate from completing — including SARIF upload and PR comment, which run after the report mirror step.
+- The orchestrator now tries the workspace mirror, logs a warning with a remediation hint if it fails, and continues with `/tmp/reports/` only. `actions/upload-artifact` in the consumer workflow degrades to its existing `if-no-files-found: warn` behavior — harmless. SARIF upload and PR comment now run correctly even when the workspace is not writable.
+
 ## [0.1.0-alpha.10] - 2026-04-25
 
 ### Changed

@@ -161,20 +161,39 @@ def main(  # noqa: PLR0913 — Click entry
     report.refresh_stats()
 
     # Reports get written in two places:
-    #   1. /tmp/reports/      — kept for backward-compat with anything that
-    #                            reads from that path.
+    #   1. /tmp/reports/      — guaranteed-writable, primary location.
     #   2. <workspace>/.purplegate-reports/ — INSIDE the consumer's checkout,
     #                            so a downstream `actions/upload-artifact`
-    #                            step can pick them up. Docker-container
-    #                            Actions can't add post-steps to upload
-    #                            themselves; the workspace-write is the
-    #                            workaround.
+    #                            step can pick them up. The workspace is
+    #                            owned by the runner uid; the container runs
+    #                            as non-root (uid 10001), so this write may
+    #                            fail with PermissionError on stock GitHub-
+    #                            hosted runners. We try, log if it fails,
+    #                            and continue — the upload-artifact step
+    #                            then warns "no files found" but does not
+    #                            fail the build.
     formats = {f.strip() for f in report_format.split(",") if f.strip()}
     pr_max = merged.get("reporting", {}).get("pr_comment_max_findings", 10)
 
-    out_dirs = [Path("/tmp/reports"), workspace / ".purplegate-reports"]
-    for out_dir in out_dirs:
-        out_dir.mkdir(parents=True, exist_ok=True)
+    tmp_dir = Path("/tmp/reports")
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    out_dirs: list[Path] = [tmp_dir]
+
+    workspace_mirror = workspace / ".purplegate-reports"
+    try:
+        workspace_mirror.mkdir(parents=True, exist_ok=True)
+        out_dirs.append(workspace_mirror)
+    except (PermissionError, OSError) as exc:
+        log.warning(
+            "Skipping workspace mirror %s: %s. Reports stay in %s. "
+            "actions/upload-artifact in the consumer workflow will warn "
+            "'no files found' (harmless when if-no-files-found: warn). "
+            "To enable the workspace mirror, ensure the runner workspace "
+            "is writable by uid 10001 (e.g. `sudo chown -R 10001:10001 .` "
+            "in a step before the purplegate one).",
+            workspace_mirror, exc, tmp_dir,
+        )
+
     primary_md = out_dirs[0] / "audit.md"
     primary_sarif = out_dirs[0] / "audit.sarif"
 
