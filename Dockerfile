@@ -119,7 +119,7 @@ RUN set -eux; \
 # required because the scanners have mutually incompatible transitive
 # dependencies (e.g. semgrep pins tomli~=2.0.1, pip-audit pins >=2.2.1).
 
-FROM python:3.12.7-slim-bookworm@sha256:60d9996b6a8a3689d36db740b49f4327be3be09a21122bd02fb8895abb38b50d AS python-builder
+FROM python:3.14.5-slim-bookworm@sha256:a3974109d36f164ca70024bc0d0828ac706e4ccda849f8638d879e91f79e90ec AS python-builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -158,7 +158,7 @@ RUN pip install --no-cache-dir pipx \
  && pipx install --python /usr/local/bin/python "pip-audit==2.10.0"
 
 # ── Stage 3: final runtime ───────────────────────────────────────────────────
-FROM python:3.12.7-slim-bookworm@sha256:60d9996b6a8a3689d36db740b49f4327be3be09a21122bd02fb8895abb38b50d
+FROM python:3.14.5-slim-bookworm@sha256:a3974109d36f164ca70024bc0d0828ac706e4ccda849f8638d879e91f79e90ec
 
 LABEL org.opencontainers.image.source="https://github.com/sameermohan-git/purplegate" \
       org.opencontainers.image.description="Red/blue-team CI gate for agentic-AI apps" \
